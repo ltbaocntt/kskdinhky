@@ -903,71 +903,69 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                   </div>
 
                   {/* Bệnh tật bản thân */}
-                  <div className="border p-4 rounded-xl space-y-3 bg-slate-50/20">
+                  <div className="border p-4 rounded-xl space-y-4 bg-slate-50/20">
                     <h4 className="font-bold text-xs uppercase text-slate-600 border-b pb-1">B. Tiền sử bệnh tật bản thân</h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">Mã TSBT truyền nhiễm</label>
-                          <select
-                            value={record.MA_TSBT}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              handleChange("MA_TSBT", val);
-                              if (val === 0) handleChange("TSBT_TEN_BENH", "");
-                            }}
-                            className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg"
-                          >
-                            <option value={0}>0: Không bệnh</option>
-                            <option value={1}>1: Có bệnh</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">Chi tiết bệnh (ICD-10)</label>
-                          <input
-                            type="text"
-                            disabled={record.MA_TSBT === 0}
-                            value={record.TSBT_TEN_BENH}
-                            onChange={(e) => handleChange("TSBT_TEN_BENH", e.target.value)}
-                            placeholder="Mã ICD-10"
-                            className="w-full text-sm py-2 text-center border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase"
-                          />
-                        </div>
+                    <div className="grid grid-cols-1 gap-3.5">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Mã TSBT truyền nhiễm</label>
+                        <select
+                          value={record.MA_TSBT}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            handleChange("MA_TSBT", val);
+                            if (val === 0) handleChange("TSBT_TEN_BENH", "");
+                          }}
+                          className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
+                        >
+                          <option value={0}>0: Không bệnh</option>
+                          <option value={1}>1: Có bệnh</option>
+                        </select>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">Đang điều trị bệnh?</label>
-                          <select
-                            value={record.CO_DANG_DIEU_TRI_BENH}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              handleChange("CO_DANG_DIEU_TRI_BENH", val);
-                              if (val === 0) {
-                                handleChange("TEN_BENH_DANG_DIEU_TRI", "");
-                                handleChange("TEN_THUOC", "");
-                              }
-                            }}
-                            className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg"
-                          >
-                            <option value={0}>Mã "0": Không</option>
-                            <option value={1}>Mã "1": Có</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">Mã bệnh đang điều trị</label>
-                          <input
-                            type="text"
-                            disabled={record.CO_DANG_DIEU_TRI_BENH === 0}
-                            value={record.TEN_BENH_DANG_DIEU_TRI}
-                            onChange={(e) => handleChange("TEN_BENH_DANG_DIEU_TRI", e.target.value)}
-                            placeholder="Mã ICD-10"
-                            className="w-full text-sm py-2 text-center border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase"
-                          />
-                        </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Chi tiết bệnh (ICD-10)</label>
+                        <input
+                          type="text"
+                          disabled={record.MA_TSBT === 0}
+                          value={record.TSBT_TEN_BENH}
+                          onChange={(e) => handleChange("TSBT_TEN_BENH", e.target.value)}
+                          placeholder="Mã ICD-10"
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
+                        />
                       </div>
 
-                      <div className="col-span-2">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Đang điều trị bệnh?</label>
+                        <select
+                          value={record.CO_DANG_DIEU_TRI_BENH}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            handleChange("CO_DANG_DIEU_TRI_BENH", val);
+                            if (val === 0) {
+                              handleChange("TEN_BENH_DANG_DIEU_TRI", "");
+                              handleChange("TEN_THUOC", "");
+                            }
+                          }}
+                          className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
+                        >
+                          <option value={0}>Mã "0": Không</option>
+                          <option value={1}>Mã "1": Có</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Mã bệnh đang điều trị</label>
+                        <input
+                          type="text"
+                          disabled={record.CO_DANG_DIEU_TRI_BENH === 0}
+                          value={record.TEN_BENH_DANG_DIEU_TRI}
+                          onChange={(e) => handleChange("TEN_BENH_DANG_DIEU_TRI", e.target.value)}
+                          placeholder="Mã ICD-10"
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
+                        />
+                      </div>
+
+                      <div>
                         <label className="block text-xs font-medium text-slate-600 mb-1">Tên thuốc đang sử dụng điều trị</label>
                         <input
                           type="text"
@@ -975,7 +973,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                           value={record.TEN_THUOC}
                           onChange={(e) => handleChange("TEN_THUOC", e.target.value)}
                           placeholder="Nhập chi tiết biệt dược, liều lượng dùng"
-                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50"
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
                         />
                       </div>
                     </div>
