@@ -28,7 +28,7 @@ export const EXCEL_COLUMNS: { key: keyof HealthRecord; header: string; desc?: st
   // II. Thông tin chung về cơ sở khám
   { key: "MA_LK", header: "Mã Lượt Khám", desc: "Mã lượt khám sức khỏe (Ví dụ: LK-9831A)" },
   { key: "MA_CSKCB", header: "Mã Cơ Sở KCB (Mã định danh)", desc: "Mã số cơ sở y tế theo danh mục" },
-  { key: "MA_GTIN_CSKCB", header: "Mã GTIN Cơ Sở (GLN)", desc: "Mã vạch GLN gồm 13 ký tự" },
+  { key: "MA_GTIN_CSKCB", header: "Tên Cơ Sở Khám Chữa Bệnh", desc: "Tên bệnh viện, phòng khám hoặc cơ sở y tế thực hiện" },
   { key: "NGAY_VAO", header: "Ngày khám bệnh (yyyyMMddHHmm)", desc: "Ngày giờ bắt đầu khám" },
 
   // III. Tiền sử bệnh
@@ -243,7 +243,7 @@ export function downloadExcelTemplateOnly() {
       LY_DO_VV: "Khám sức khỏe tuyển dụng công sở",
       MA_LK: "LK-TEMPF01",
       MA_CSKCB: "01001",
-      MA_GTIN_CSKCB: "8931112223334",
+      MA_GTIN_CSKCB: "Bệnh viện Đa khoa Hà Nội",
       NGAY_VAO: "202605210800",
       TSGD_MAC_BENH: 0,
       TSGD_TEN_BENH: "",
@@ -331,7 +331,7 @@ export function downloadExcelTemplateOnly() {
       LY_DO_VV: "Khám sức khỏe kiểm tra định kỳ hàng năm",
       MA_LK: "LK-TEMPF02",
       MA_CSKCB: "79001",
-      MA_GTIN_CSKCB: "8930123456790",
+      MA_GTIN_CSKCB: "Bệnh viện Đa khoa Sài Gòn",
       NGAY_VAO: "202605210900",
       TSGD_MAC_BENH: 1,
       TSGD_TEN_BENH: "I10;E11",

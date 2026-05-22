@@ -28,7 +28,7 @@ export interface HealthRecord {
   // II. Thông tin chung về cơ sở khám sức khỏe (15 - 18)
   MA_LK: string;                    // TT 15: Lượt khám (Chuỗi, 100)
   MA_CSKCB: string;                 // TT 16: Mã cơ sở khám bệnh, chữa bệnh (Chuỗi, 5)
-  MA_GTIN_CSKCB: string;            // TT 17: Mã cơ sở theo chuẩn GLN (Chuỗi, 13)
+  MA_GTIN_CSKCB: string;            // TT 17: Tên cơ sở khám chữa bệnh (Chuỗi, 255)
   NGAY_VAO: string;                 // TT 18: Ngày khám sức khỏe (Chuỗi, 12: yyyyMMddHHmm)
 
   // III. Tiền sử bệnh của đối tượng khám sức khỏe (19 - 35)
@@ -302,7 +302,7 @@ export const sampleRecordsList: HealthRecord[] = [
 
     MA_LK: "LK-9831A",
     MA_CSKCB: "79001",
-    MA_GTIN_CSKCB: "8930123456789",
+    MA_GTIN_CSKCB: "Bệnh viện Quận 1 - Cơ sở 1",
     NGAY_VAO: "202605150830",
 
     TSGD_MAC_BENH: 0,
@@ -414,7 +414,7 @@ export const sampleRecordsList: HealthRecord[] = [
 
     MA_LK: "LK-2481B",
     MA_CSKCB: "79002",
-    MA_GTIN_CSKCB: "8930123456790",
+    MA_GTIN_CSKCB: "Bệnh viện Đa khoa Sài Gòn",
     NGAY_VAO: "202605180900",
 
     TSGD_MAC_BENH: 1,

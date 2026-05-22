@@ -243,11 +243,11 @@ export default function PrintPreview({ record, onBack, onUpdateRecord }: PrintPr
         {/* Header Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-6 mb-8 gap-4">
           <div className="text-left">
-            <h4 className="text-xs uppercase font-semibold text-slate-500 tracking-wider">
-              {record.MA_CSKCB ? `Cơ sở y tế: ${record.MA_CSKCB}` : "BỆNH VIỆN / CƠ SỞ Y TẾ"}
+            <h4 className="text-xs uppercase font-extrabold text-slate-800 tracking-wide">
+              {record.MA_GTIN_CSKCB || "BỆNH VIỆN / CƠ SỞ KHÁM CHỮA BỆNH"}
             </h4>
-            <p className="text-xs text-slate-400">
-              GLN: {record.MA_GTIN_CSKCB || "---"}
+            <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+              Mã cơ sở (KCB): {record.MA_CSKCB || "---"}
             </p>
           </div>
           <div className="text-center md:text-right">

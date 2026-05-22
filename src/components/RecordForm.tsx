@@ -8,10 +8,15 @@ import { HealthRecord, createEmptyRecord } from "../types";
 import { 
   ArrowLeft, ArrowRight, Save, User, ShieldCheck, Heart, 
   Stethoscope, FileCode, Check, AlertCircle, RefreshCw, PenTool,
-  Smartphone, Building2, Lock
+  Smartphone, Building2, Lock, Search, MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import SmartCASignerModal from "./SmartCASignerModal";
+import { 
+  VIETNAM_ADMINISTRATIVE_DIVISIONS, 
+  getFlatDivisionsList, 
+  FlatDivisionSearch 
+} from "../utils/administrative";
 
 interface RecordFormProps {
   initialRecord?: HealthRecord;
@@ -56,6 +61,40 @@ function compileDateField(date: string): string {
   return date.replace(/-/g, ""); // yyyyMMdd
 }
 
+// Clean up and isolate the street/house part of the current address
+function cleanStreetPrefix(currentAddress: string, oldProvCode: string, oldCommCode: string): string {
+  if (!currentAddress || currentAddress.trim() === "" || currentAddress === "Chưa xác định") {
+    return "";
+  }
+  
+  let street = currentAddress.trim();
+  
+  // Find old commune/province names
+  const oldProv = VIETNAM_ADMINISTRATIVE_DIVISIONS.find(p => p.code === oldProvCode);
+  const oldComm = oldProv?.communes.find(c => c.code === oldCommCode);
+  
+  const namesToRemove: string[] = [];
+  if (oldComm) {
+    namesToRemove.push(oldComm.name.trim());
+  }
+  if (oldProv) {
+    namesToRemove.push(oldProv.name.trim());
+  }
+  
+  namesToRemove.forEach(name => {
+    if (!name) return;
+    const rEscaped = name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`,?\\s*${rEscaped}\\s*,?`, "gi");
+    street = street.replace(regex, ",");
+  });
+  
+  // Clean up trailing commas, leading commas, and extra spaces
+  street = street.replace(/^[\s,]+|[\s,]+$/g, "").trim();
+  street = street.replace(/,\s*,/g, ",").trim();
+  
+  return street;
+}
+
 export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFormProps) {
   // Mode check
   const isEditing = !!initialRecord;
@@ -77,6 +116,11 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
   // Current sub-form wizard step (1 to 6)
   const [step, setStep] = useState<number>(1);
   const totalSteps = 6;
+
+  // Search states for administrative divisions
+  const [addressSearch, setAddressSearch] = useState("");
+  const [isAddressDropdownOpen, setIsAddressDropdownOpen] = useState(false);
+  const [filterProvinceCode, setFilterProvinceCode] = useState<string>("");
 
   // Track field touch validity
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -152,7 +196,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
     checkMaxStr("MATINH_CU_TRU", 3, "Mã tỉnh");
     checkMaxStr("MAXA_CU_TRU", 5, "Mã xã");
     checkMaxStr("MA_CSKCB", 5, "Mã CSKCB");
-    checkMaxStr("MA_GTIN_CSKCB", 13, "Mã GLN");
+    checkMaxStr("MA_GTIN_CSKCB", 255, "Tên cơ sở khám chữa bệnh");
     checkMaxStr("KET_LUAN_LOAI_SUC_KHOE", 255, "Kết luận xếp loại sức khỏe");
     checkMaxStr("KET_LUAN_CAC_VAN_DE_SUC_KHOE", 255, "Kết luận bệnh lý cần chú ý");
 
@@ -459,34 +503,198 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                     />
                   </div>
 
-                  {/* MATINH_CU_TRU */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Mã Tỉnh nơi cư trú (02 ký tự số)
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={3}
-                      value={record.MATINH_CU_TRU}
-                      onChange={(e) => handleChange("MATINH_CU_TRU", e.target.value.replace(/\D/g, ""))}
-                      placeholder="79 (Hồ Chí Minh), 01 (Hà Nội)..."
-                      className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none font-mono"
-                    />
-                  </div>
+                  {/* Tích hợp Bộ chọn Địa danh Hành chính 2 cấp (Tỉnh & Xã) */}
+                  <div className="md:col-span-2 border border-slate-150 bg-slate-50/50 p-4 rounded-xl space-y-3">
+                    <div className="flex justify-between items-center border-b pb-2 mb-2">
+                      <span className="text-xs font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4 text-blue-600 animate-pulse" />
+                        Địa danh hành chính (Chính quyền 2 cấp)
+                      </span>
+                      {record.MATINH_CU_TRU && record.MAXA_CU_TRU && (
+                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          {VIETNAM_ADMINISTRATIVE_DIVISIONS.find(p => p.code === record.MATINH_CU_TRU)?.communes.find(c => c.code === record.MAXA_CU_TRU)?.name || "Đã chọn"} - {VIETNAM_ADMINISTRATIVE_DIVISIONS.find(p => p.code === record.MATINH_CU_TRU)?.name || "Đã cập nhật"}
+                        </span>
+                      )}
+                    </div>
 
-                  {/* MAXA_CU_TRU */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Mã Xã nơi cư trú (05 ký tự số)
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={5}
-                      value={record.MAXA_CU_TRU}
-                      onChange={(e) => handleChange("MAXA_CU_TRU", e.target.value.replace(/\D/g, ""))}
-                      placeholder="Ví dụ: 26743"
-                      className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none font-mono"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* Cột 1: Tìm kiếm nhanh hợp nhất */}
+                      <div className="relative">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          1. Tìm nhanh theo tên Xã hoặc Tỉnh
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={addressSearch}
+                            onChange={(e) => {
+                              setAddressSearch(e.target.value);
+                              setIsAddressDropdownOpen(true);
+                            }}
+                            onFocus={() => setIsAddressDropdownOpen(true)}
+                            placeholder="Gõ tìm 'Tràng Tiền', 'Bến Thành', ..."
+                            className="w-full text-sm py-2 pl-9 pr-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                          />
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                          {addressSearch && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAddressSearch("");
+                                setIsAddressDropdownOpen(false);
+                              }}
+                              className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600"
+                            >
+                              Xóa
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Listbox Dropdown */}
+                        <AnimatePresence>
+                          {isAddressDropdownOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.98, y: -4 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.98, y: -4 }}
+                              className="absolute z-30 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto"
+                            >
+                              <div className="p-1">
+                                {getFlatDivisionsList()
+                                  .filter(item => {
+                                    const q = addressSearch.toLowerCase();
+                                    return item.communeName.toLowerCase().includes(q) || item.provinceName.toLowerCase().includes(q);
+                                  })
+                                  .slice(0, 50) // limit list for performance
+                                  .map((item, idx) => (
+                                    <div
+                                      key={`${item.provinceCode}-${item.communeCode}-${idx}`}
+                                      onClick={() => {
+                                        handleChange("MATINH_CU_TRU", item.provinceCode);
+                                        handleChange("MAXA_CU_TRU", item.communeCode);
+                                        
+                                        // Isolate street/house prefix and compile pristine suggestions
+                                        const streetPrefix = cleanStreetPrefix(record.DIA_CHI, record.MATINH_CU_TRU, record.MAXA_CU_TRU);
+                                        const suggestedAddress = streetPrefix 
+                                          ? `${streetPrefix}, ${item.communeName.trim()}, ${item.provinceName.trim()}` 
+                                          : `${item.communeName.trim()}, ${item.provinceName.trim()}`;
+                                        
+                                        handleChange("DIA_CHI", suggestedAddress);
+
+                                        setAddressSearch(`${item.communeName} - ${item.provinceName}`);
+                                        setIsAddressDropdownOpen(false);
+                                      }}
+                                      className="text-xs text-left px-3 py-2 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors flex flex-col gap-0.5 border-b border-slate-50 last:border-0"
+                                    >
+                                      <div className="flex justify-between items-center">
+                                        <span className="font-bold text-slate-800">{item.communeName}</span>
+                                        <span className="text-[10px] bg-blue-50 text-blue-700 font-mono px-1 py-0.2 rounded font-semibold">Xã: {item.communeCode}</span>
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-slate-500">{item.provinceName}</span>
+                                        <span className="text-[9px] text-slate-400 font-mono">Tỉnh: {item.provinceCode}</span>
+                                      </div>
+                                    </div>
+                                  ))
+                                }
+                                {getFlatDivisionsList().filter(item => {
+                                  const q = addressSearch.toLowerCase();
+                                  return item.communeName.toLowerCase().includes(q) || item.provinceName.toLowerCase().includes(q);
+                                }).length === 0 && (
+                                  <p className="text-xs text-slate-450 p-3 italic text-center">Không tìm thấy địa phương nào khớp.</p>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Cột 2: Chọn thủ công Dual Dropdown / Listboxes */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Chọn Tỉnh / Thành
+                          </label>
+                          <select
+                            value={record.MATINH_CU_TRU}
+                            onChange={(e) => {
+                              const pCode = e.target.value;
+                              handleChange("MATINH_CU_TRU", pCode);
+                              
+                              const streetPrefix = cleanStreetPrefix(record.DIA_CHI, record.MATINH_CU_TRU, record.MAXA_CU_TRU);
+                              const matchedProv = VIETNAM_ADMINISTRATIVE_DIVISIONS.find(p => p.code === pCode);
+                              
+                              if (matchedProv && matchedProv.communes.length > 0) {
+                                const firstComm = matchedProv.communes[0];
+                                handleChange("MAXA_CU_TRU", firstComm.code);
+                                setAddressSearch(`${firstComm.name} - ${matchedProv.name}`);
+                                
+                                const suggestedAddress = streetPrefix 
+                                  ? `${streetPrefix}, ${firstComm.name.trim()}, ${matchedProv.name.trim()}` 
+                                  : `${firstComm.name.trim()}, ${matchedProv.name.trim()}`;
+                                handleChange("DIA_CHI", suggestedAddress);
+                              } else {
+                                handleChange("MAXA_CU_TRU", "");
+                                setAddressSearch("");
+                                handleChange("DIA_CHI", streetPrefix);
+                              }
+                            }}
+                            className="w-full text-xs py-2 px-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white font-medium text-slate-800 cursor-pointer"
+                          >
+                            <option value="">-- Chọn Tỉnh --</option>
+                            {VIETNAM_ADMINISTRATIVE_DIVISIONS.map(p => (
+                              <option key={p.code} value={p.code}>
+                                {p.name} ({p.code})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Chọn Xã / Phường
+                          </label>
+                          <select
+                            value={record.MAXA_CU_TRU}
+                            disabled={!record.MATINH_CU_TRU}
+                            onChange={(e) => {
+                              const xCode = e.target.value;
+                              handleChange("MAXA_CU_TRU", xCode);
+
+                              const streetPrefix = cleanStreetPrefix(record.DIA_CHI, record.MATINH_CU_TRU, record.MAXA_CU_TRU);
+                              const parsedP = VIETNAM_ADMINISTRATIVE_DIVISIONS.find(p => p.code === record.MATINH_CU_TRU);
+                              const parsedX = parsedP?.communes.find(c => c.code === xCode);
+                              
+                              if (parsedP && parsedX) {
+                                setAddressSearch(`${parsedX.name} - ${parsedP.name}`);
+                                const suggestedAddress = streetPrefix 
+                                  ? `${streetPrefix}, ${parsedX.name.trim()}, ${parsedP.name.trim()}` 
+                                  : `${parsedX.name.trim()}, ${parsedP.name.trim()}`;
+                                handleChange("DIA_CHI", suggestedAddress);
+                              }
+                            }}
+                            className="w-full text-xs py-2 px-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white font-medium text-slate-800 disabled:bg-slate-100 disabled:text-slate-400 cursor-pointer"
+                          >
+                            <option value="">-- Chọn Xã --</option>
+                            {record.MATINH_CU_TRU &&
+                              VIETNAM_ADMINISTRATIVE_DIVISIONS.find(p => p.code === record.MATINH_CU_TRU)?.communes.map(c => (
+                                <option key={c.code} value={c.code}>
+                                  {c.name} ({c.code})
+                                </option>
+                              ))
+                            }
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hiển thị Mã số hành chính đã xuất theo Thông tư 17 để phục vụ tích hợp quốc gia */}
+                    <div className="flex gap-4 items-center bg-slate-100 p-2 rounded-lg text-[10px] font-mono text-slate-500 justify-center">
+                      <span>Mã Tỉnh (TT 10): <strong className="text-slate-700 bg-white px-1.5 py-0.5 rounded border">{record.MATINH_CU_TRU || "---"}</strong></span>
+                      <span>Mã Xã (TT 11): <strong className="text-slate-700 bg-white px-1.5 py-0.5 rounded border">{record.MAXA_CU_TRU || "---"}</strong></span>
+                    </div>
                   </div>
 
                   {/* DIEN_THOAI */}
@@ -549,19 +757,22 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                     {errors.MA_CSKCB && <p className="text-red-500 text-[11px] mt-1">{errors.MA_CSKCB}</p>}
                   </div>
 
-                  {/* MA_GTIN_CSKCB (GLN) */}
+                  {/* MA_GTIN_CSKCB (Tên cơ sở khám chữa bệnh) */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Mã cơ sở theo chuẩn toàn cầu GLN (13 số)
+                      Tên cơ sở khám chữa bệnh <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      maxLength={13}
+                      maxLength={255}
                       value={record.MA_GTIN_CSKCB}
-                      onChange={(e) => handleChange("MA_GTIN_CSKCB", e.target.value.replace(/\D/g, ""))}
-                      placeholder="GLN gồm 13 số định danh liên minh"
-                      className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none font-mono"
+                      onChange={(e) => handleChange("MA_GTIN_CSKCB", e.target.value)}
+                      placeholder="Ví dụ: Bệnh viện Đa khoa Quận 1 hoặc Phòng khám đa khoa..."
+                      className={`w-full text-sm py-2 px-3 border rounded-lg focus:outline-none ${
+                        errors.MA_GTIN_CSKCB ? "border-red-305" : "border-slate-300"
+                      }`}
                     />
+                    <span className="text-[10px] text-slate-400 mt-1 block">Tên hiển thị chính thức của đơn vị y tế trên hồ sơ.</span>
                     {errors.MA_GTIN_CSKCB && <p className="text-red-500 text-[11px] mt-1">{errors.MA_GTIN_CSKCB}</p>}
                   </div>
 
