@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Quản lý Hồ sơ Khám sức khỏe",
+  "description": "Form nhập liệu và hệ thống lưu trữ 84 tiêu chuẩn hồ sơ khám sức khỏe điện tử theo đúng quy định mẫu văn bản hành chính y tế.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
