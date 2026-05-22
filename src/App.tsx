@@ -8,12 +8,27 @@ import { HealthRecord, sampleRecordsList, createEmptyRecord } from "./types";
 import Dashboard from "./components/Dashboard";
 import RecordForm from "./components/RecordForm";
 import PrintPreview from "./components/PrintPreview";
-import { Activity, ShieldCheck, HeartPulse } from "lucide-react";
+import Login from "./components/Login";
+import { Activity, ShieldCheck, HeartPulse, LogOut } from "lucide-react";
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const persisted = localStorage.getItem("MED_RECORDS_AUTH");
+      const sessioned = sessionStorage.getItem("MED_RECORDS_AUTH");
+      return persisted === "true" || sessioned === "true";
+    }
+    return false;
+  });
   const [records, setRecords] = useState<HealthRecord[]>([]);
   const [viewState, setViewState] = useState<"dashboard" | "create" | "edit" | "view">("dashboard");
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("MED_RECORDS_AUTH");
+    sessionStorage.removeItem("MED_RECORDS_AUTH");
+    setIsAuthenticated(false);
+  };
 
   // Load from LocalStorage or default demo data on Mount
   useEffect(() => {
@@ -104,6 +119,10 @@ export default function App() {
   // Find currently active editing/view records
   const currentRecord = records.find(r => r.id === selectedRecordId);
 
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans antialiased text-slate-800">
       {/* Top Professional Navigation Header */}
@@ -128,7 +147,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4 text-xs font-semibold text-slate-500">
-            <div className="hidden sm:flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-[10px] font-bold">
+            <div className="hidden lg:flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full text-[10px] font-bold">
               <ShieldCheck className="w-3.5 h-3.5" />
               BẢO MẬT CHỮ KÝ SỐ (SHA256)
             </div>
@@ -136,6 +155,14 @@ export default function App() {
               <HeartPulse className="w-4 h-4 text-red-500" />
               <span>Y TẾ ĐỒNG BỘ MẪU VĂN BẢN</span>
             </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl hover:text-red-600 transition-all cursor-pointer font-bold.5 border border-slate-200/50"
+              title="Đăng xuất"
+            >
+              <LogOut className="w-4 h-4 text-slate-600" />
+              <span className="hidden sm:inline">Đăng xuất</span>
+            </button>
           </div>
         </div>
       </header>
