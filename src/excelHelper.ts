@@ -130,7 +130,41 @@ export const EXCEL_COLUMNS: { key: keyof HealthRecord; header: string; desc?: st
   { key: "KET_LUAN_LOAI_SUC_KHOE", header: "Phân loại sức khỏe (Ví dụ: Loại I / Loại II)", desc: "Yêu cầu điền đúng format: Loại I, Loại II, Loại III..." },
   { key: "KET_LUAN_CAC_VAN_DE_SUC_KHOE", header: "Các lưu ý sức khỏe khi công tác", desc: "Các khuyến cáo y khoa" },
   { key: "CKS_NGUOI_KET_LUAN", header: "Chữ ký số Bác Sĩ kết luận", desc: "Xác thực bác sĩ chủ trì" },
-  { key: "CKS_BENH_VIEN", header: "Chữ ký số Bệnh Viện/Cơ sở", desc: "Xác thực danh tính cơ sở y tế" }
+  { key: "CKS_BENH_VIEN", header: "Chữ ký số Bệnh Viện/Cơ sở", desc: "Xác thực danh tính cơ sở y tế" },
+
+  // VIII. Khám Sức Khỏe Từ 18 Tuổi Trở Lên (Mẫu Người Lớn)
+  { key: "KIEU_MAU", header: "Kiểu mẫu ứng dụng (UNDER_18 / OVER_19)", desc: "Mẫu khám" },
+  { key: "NOI_CONG_TAC_HIEN_TAI", header: "Nơi công tác hiện tại", desc: "" },
+  { key: "MA_NGHE_NGHIEP", header: "Mã nghề nghiệp (GD)", desc: "" },
+  { key: "NOI_CONG_TAC_TRUOC_DAY", header: "Nơi làm việc trước đây (Công việc cũ)", desc: "" },
+  { key: "NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI", header: "Ngày bắt đầu làm công việc hiện tại (yyyyMMdd)", desc: "" },
+  { key: "NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY", header: "Ngày kết thúc công việc trước đây (yyyyMMdd)", desc: "" },
+  { key: "CO_KINH_NGUYET_NAM_BAO_NHIEU_TUOI", header: "Tuổi bắt đầu hành kinh", desc: "" },
+  { key: "TINH_CHAT_KINH_NGUYET", header: "Tính chất chu kỳ kinh (1: Đều; 0: Không đều)", desc: "" },
+  { key: "CHU_KY_KINH", header: "Số ngày hoặc chu kỳ kinh", desc: "" },
+  { key: "LUONG_KINH", header: "Lượng kinh nguyệt", desc: "" },
+  { key: "DAU_BUNG_KINH", header: "Đau bụng kinh (0: Không; 1: Có)", desc: "" },
+  { key: "DA_LAP_GIA_DINH", header: "Tình trạng hôn nhân / Đã lập gia đình (0: Chưa; 1: Có)", desc: "" },
+  { key: "PARA", header: "PARA (Sinh-Sảy-Sớm-Sống)", desc: "Ví dụ: 2002" },
+  { key: "SO_LAN_MO_SAN_PHU_KHOA", header: "Số lần phẫu thuật sản phụ khoa", desc: "" },
+  { key: "BIEN_PHAP_TRANH_THAI", header: "Biện pháp tránh thai đang dùng", desc: "" },
+  { key: "TSBT_NAM_PHAT_HIEN_BENH", header: "Năm phát hiện bệnh bản thân", desc: "" },
+  { key: "TSBT_NAM_PHAT_HIEN_BENH_NGHE_NGHIEP", header: "Năm phát hiện bệnh nghề nghiệp", desc: "" },
+  { key: "TSBT_TEN_BENH_NGHE_NGHIEP", header: "Tên bệnh nghề nghiệp mắc phải", desc: "" },
+  { key: "KHAM_NOI_KHOA", header: "Có khám Nội Khoa (0: Không; 1: Có)", desc: "" },
+  { key: "NOI_KHOA_TUAN_HOAN", header: "Khám Nội Khoa - Tuần hoàn (Kết quả)", desc: "" },
+  { key: "NOI_KHOA_HO_HAP", header: "Khám Nội Khoa - Hô hấp (Kết quả)", desc: "" },
+  { key: "NOI_KHOA_TIEU_HOA", header: "Khám Nội Khoa - Tiêu hóa (Kết quả)", desc: "" },
+  { key: "NOI_KHOA_THAN_TIETNIEU", header: "Khám Nội Khoa - Thận tiết niệu (Kết quả)", desc: "" },
+  { key: "NOI_KHOA_CO_XUONG_KHOP", header: "Khám Nội - Cơ xương khớp (Kết quả)", desc: "" },
+  { key: "NOI_KHOA_THAN_KINH", header: "Khám Nội Khoa - Thần kinh (Kết quả)", desc: "" },
+  { key: "NOI_KHOA_TAM_THAN", header: "Khám Nội Khoa - Tâm thần (Kết quả)", desc: "" },
+  { key: "KHAM_NGOI_KHOA", header: "Có khám Ngoại Khoa (0: Không; 1: Có)", desc: "" },
+  { key: "KET_QUA_KHAM_NGOI_KHOA", header: "Kết quả khám Ngoại Khoa", desc: "" },
+  { key: "KHAM_DA_LIEU", header: "Có khám Da Liễu (0: Không; 1: Có)", desc: "" },
+  { key: "KET_QUA_KHAM_DA_LIEU", header: "Kết quả khám Da Liễu", desc: "" },
+  { key: "KHAM_SAN_PHU_KHOA", header: "Có khám Sản Phụ Khoa (0: Không; 1: Có)", desc: "" },
+  { key: "KET_QUA_KHAM_SAN_PHU_KHOA", header: "Kết quả khám Sản Phụ Khoa", desc: "" }
 ];
 
 // Helper to determine gender value from various textual entries

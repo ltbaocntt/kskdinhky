@@ -8,6 +8,9 @@ export interface HealthRecord {
   id: string; // Unique client-side ID for local storage
   createdAt: string; // Time of local creation
   updatedAt: string; // Time of last update
+  
+  // Template Identifier: "UNDER_18" (mẫu dưới 18 tuổi) hoặc "OVER_19" (mẫu từ 18 tuổi trở lên)
+  KIEU_MAU?: "UNDER_18" | "OVER_19";
 
   // I. Thông tin hành chính (1 - 14)
   HO_TEN: string;                   // TT 1: Họ và tên (Chuỗi, 255)
@@ -24,6 +27,14 @@ export interface HealthRecord {
   DIEN_THOAI: string;               // TT 12: Điện thoại (Chuỗi, 15)
   LY_DO_VV: string;                 // TT 13: Lý do khám sức khỏe (Chuỗi, n)
   CKS_NGUOI_KHAM: string;           // TT 14: Chữ ký số người khám (Chuỗi, 1024)
+
+  // Adult administrative fields (từ 18 tuổi trở lên):
+  MA_NGHE_NGHIEP?: string;          // TT 10 adult: Mã nghề nghiệp (Chuỗi, 2)
+  NOI_CONG_TAC_HIEN_TAI?: string;   // TT 11 adult: Nơi công tác/học tập hiện tại (Chuỗi, 1024)
+  NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI?: string; // TT 12 adult: Ngày bắt đầu làm việc current (yyyyMMdd)
+  NOI_CONG_TAC_TRUOC_DAY?: string;   // TT 13 adult: Nghề, công việc trước đây (Chuỗi, 1024)
+  NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY?: string; // TT 14 adult: Ngày bắt đầu làm việc trước đó (yyyyMMdd)
+  NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY?: string; // TT 15 adult: Ngày kết thúc làm việc trước đó (yyyyMMdd)
 
   // II. Thông tin chung về cơ sở khám sức khỏe (15 - 18)
   MA_LK: string;                    // TT 15: Lượt khám (Chuỗi, 100)
@@ -58,6 +69,23 @@ export interface HealthRecord {
   TEN_BENH_DANG_DIEU_TRI: string;   // TT 34: Cụ thể tên bệnh đang điều trị (Chuỗi, 1024 - ICD-10)
   TEN_THUOC: string;                // TT 35: Thuốc đang sử dụng điều trị (Chuỗi, 1024)
 
+  // Adult history of diseases fields (từ 18 tuổi trở lên):
+  TSBT_NAM_PHAT_HIEN_BENH?: string;            // Năm phát hiện bệnh bản thân
+  TSBT_TEN_BENH_NGHE_NGHIEP?: string;          // Tên bệnh nghề nghiệp
+  TSBT_NAM_PHAT_HIEN_BENH_NGHE_NGHIEP?: string;// Năm phát hiện bệnh nghề nghiệp
+
+  // C. Tiền sử sản phụ khoa (Sử dụng cho nữ sinh, phụ nữ từ 18 tuổi trở lên)
+  CO_KINH_NGUYET_NAM_BAO_NHIEU_TUOI?: string | number; // Tuổi bắt đầu có kinh
+  TINH_CHAT_KINH_NGUYET?: number;                       // Tính chất kinh nguyệt (0: Không đều, 1: Đều)
+  CHU_KY_KINH?: string | number;                       // Chu kỳ kinh ngày
+  LUONG_KINH?: string | number;                        // Lượng kinh ngày
+  DAU_BUNG_KINH?: number;                              // Đau bụng kinh (0: Không, 1: Có)
+  DA_LAP_GIA_DINH?: number;                            // Đã lập gia đình (0: Chưa, 1: Có)
+  PARA?: string;                                       // PARA (Ví dụ: 0000)
+  SO_LAN_MO_SAN_PHU_KHOA?: string | number;            // Số lần mổ sản phụ khoa
+  CO_BPTT_KHONG?: number;                              // Có dùng biện pháp tránh thai không (0: Không, 1: Có)
+  BIEN_PHAP_TRANH_THAI?: string | number;              // Tên biện pháp tránh thai sử dụng
+
   // IV. Khám thể lực (36 - 40)
   CHIEU_CAO: string;                // TT 36: Chiều cao cm (Số chuỗi, 10 - tối đa 2 chữ số thập phân)
   CAN_NANG: string;                 // TT 37: Cân nặng kg (Chuỗi, 10)
@@ -67,7 +95,7 @@ export interface HealthRecord {
 
   // V. Khám lâm sàng (41 - 65)
   // A. Nhi khoa
-  KHAM_NHI_KHOA: number;            // Có khám nhi hay không (0: Không; 1: Có) -> Thêm để quản lý ẩn/hiện logic thân thiện
+  KHAM_NHI_KHOA: number;            // Có khám nhi hay không (0: Không; 1: Có)
   NHI_KHOA_TUAN_HOAN: string;       // TT 41: Nhỉ khoa tuần hoàn (Chuỗi, 1024)
   NHI_KHOA_HO_HAP: string;          // TT 42: Nhi khoa hô hấp (Chuỗi, 1024)
   NHI_KHOA_TIEU_HOA: string;         // TT 43: Nhi khoa tiêu hóa (Chuỗi, 1024)
@@ -77,6 +105,25 @@ export interface HealthRecord {
   NHI_KHOA_KHAC: number;            // TT 47: Khám lâm sàng khác (Số, 1: 0: Không; 1: Có)
   TEN_LOAI_KHAM_NHI_KHOA_KHAC: string; // TT 48: Tên loại khám lâm sàng khác (Chuỗi, 1024)
   KET_QUA_KHAM_NHI_KHOA_KHAC: string;  // TT 49: Kết quả khám lâm sàng khác (Chuỗi, 1024)
+
+  // Clinical examinations for adults (từ 18 tuổi trở lên)
+  KHAM_NOI_KHOA?: number;           // Có khám Nội khoa không (0: Không; 1: Có)
+  NOI_KHOA_TUAN_HOAN?: string;      // Tuần hoàn
+  NOI_KHOA_HO_HAP?: string;         // Hô hấp
+  NOI_KHOA_TIEU_HOA?: string;       // Tiêu hóa
+  NOI_KHOA_THAN_TIETNIEU?: string;  // Thận-Tiết niệu
+  NOI_KHOA_CO_XUONG_KHOP?: string;  // Cơ-xương-khớp
+  NOI_KHOA_THAN_KINH?: string;      // Thần kinh
+  NOI_KHOA_TAM_THAN?: string;       // Tâm thần
+
+  KHAM_NGOI_KHOA?: number;          // Có khám Ngoại khoa không (0: Không; 1: Có)
+  KET_QUA_KHAM_NGOI_KHOA?: string;  // Kết quả khám ngoại khoa
+
+  KHAM_DA_LIEU?: number;            // Có khám Da liễu không (0: Không; 1: Có)
+  KET_QUA_KHAM_DA_LIEU?: string;    // Kết quả khám da liễu
+
+  KHAM_SAN_PHU_KHOA?: number;       // Có khám Sản phụ khoa không (0: Không; 1: Có)
+  KET_QUA_KHAM_SAN_PHU_KHOA?: string;// Kết quả khám sản phụ khoa
 
   // B. Mắt
   KHAM_MAT: number;                 // Có khám mắt hay không (0: Không; 1: Có)
@@ -142,7 +189,7 @@ export interface HealthRecord {
   CKS_LANH_DAO: string;             // Chữ ký số Lãnh đạo phê duyệt
 }
 
-export const createEmptyRecord = (): HealthRecord => {
+export const createEmptyRecord = (kieuMau: "UNDER_18" | "OVER_19" = "UNDER_18"): HealthRecord => {
   const now = new Date();
   
   // Helper to get formatted date string: yyyyMMddHHmm
@@ -169,6 +216,7 @@ export const createEmptyRecord = (): HealthRecord => {
     id: recordId,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
+    KIEU_MAU: kieuMau,
 
     HO_TEN: "",
     GIOI_TINH: 3, // 3: Chưa xác định
@@ -184,6 +232,14 @@ export const createEmptyRecord = (): HealthRecord => {
     DIEN_THOAI: "",
     LY_DO_VV: "Khám sức khỏe định kỳ",
     CKS_NGUOI_KHAM: "",
+
+    // Adult admin fields (>19):
+    MA_NGHE_NGHIEP: "00", // Default: No info/unemployed
+    NOI_CONG_TAC_HIEN_TAI: "",
+    NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI: "",
+    NOI_CONG_TAC_TRUOC_DAY: "",
+    NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY: "",
+    NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY: "",
 
     MA_LK: "LK-" + Math.random().toString(36).substring(2, 9).toUpperCase(),
     MA_CSKCB: "",
@@ -211,13 +267,29 @@ export const createEmptyRecord = (): HealthRecord => {
     TEN_BENH_DANG_DIEU_TRI: "",
     TEN_THUOC: "",
 
+    // Adult history:
+    TSBT_NAM_PHAT_HIEN_BENH: "",
+    TSBT_TEN_BENH_NGHE_NGHIEP: "",
+    TSBT_NAM_PHAT_HIEN_BENH_NGHE_NGHIEP: "",
+
+    CO_KINH_NGUYET_NAM_BAO_NHIEU_TUOI: "",
+    TINH_CHAT_KINH_NGUYET: 1, // Default: Đều
+    CHU_KY_KINH: "",
+    LUONG_KINH: "",
+    DAU_BUNG_KINH: 0,
+    DA_LAP_GIA_DINH: 0,
+    PARA: "",
+    SO_LAN_MO_SAN_PHU_KHOA: "",
+    CO_BPTT_KHONG: 0,
+    BIEN_PHAP_TRANH_THAI: "",
+
     CHIEU_CAO: "",
     CAN_NANG: "",
     CHI_SO_BMI: "",
     MACH: "",
     HUYET_AP: "",
 
-    KHAM_NHI_KHOA: 0,
+    KHAM_NHI_KHOA: kieuMau === "UNDER_18" ? 1 : 0,
     NHI_KHOA_TUAN_HOAN: "",
     NHI_KHOA_HO_HAP: "",
     NHI_KHOA_TIEU_HOA: "",
@@ -227,6 +299,25 @@ export const createEmptyRecord = (): HealthRecord => {
     NHI_KHOA_KHAC: 0,
     TEN_LOAI_KHAM_NHI_KHOA_KHAC: "",
     KET_QUA_KHAM_NHI_KHOA_KHAC: "",
+
+    // Adult examinations:
+    KHAM_NOI_KHOA: kieuMau === "OVER_19" ? 1 : 0,
+    NOI_KHOA_TUAN_HOAN: "",
+    NOI_KHOA_HO_HAP: "",
+    NOI_KHOA_TIEU_HOA: "",
+    NOI_KHOA_THAN_TIETNIEU: "",
+    NOI_KHOA_CO_XUONG_KHOP: "",
+    NOI_KHOA_THAN_KINH: "",
+    NOI_KHOA_TAM_THAN: "",
+
+    KHAM_NGOI_KHOA: kieuMau === "OVER_19" ? 1 : 0,
+    KET_QUA_KHAM_NGOI_KHOA: "",
+
+    KHAM_DA_LIEU: kieuMau === "OVER_19" ? 1 : 0,
+    KET_QUA_KHAM_DA_LIEU: "",
+
+    KHAM_SAN_PHU_KHOA: kieuMau === "OVER_19" ? 1 : 0,
+    KET_QUA_KHAM_SAN_PHU_KHOA: "",
 
     KHAM_MAT: 1,
     KHONG_KINH_MAT_PHAI: "",
@@ -285,7 +376,7 @@ export const createEmptyRecord = (): HealthRecord => {
 
 export const sampleRecordsList: HealthRecord[] = [
   {
-    ...createEmptyRecord(),
+    ...createEmptyRecord("OVER_19"),
     id: "REC-DEMO01",
     HO_TEN: "Nguyễn Văn A",
     GIOI_TINH: 1, // Nam
@@ -397,7 +488,7 @@ export const sampleRecordsList: HealthRecord[] = [
     CKS_LANH_DAO: "GD_NGUYENHOANGNAM_SIGNED_VALID",
   },
   {
-    ...createEmptyRecord(),
+    ...createEmptyRecord("OVER_19"),
     id: "REC-DEMO02",
     HO_TEN: "Trần Thị B",
     GIOI_TINH: 2, // Nữ
@@ -507,5 +598,67 @@ export const sampleRecordsList: HealthRecord[] = [
     CKS_NGUOI_KET_LUAN: "BS_LETHIMAI_SIGNED_VALID",
     CKS_BENH_VIEN: "BV_DK_SG_SIGNED_VALID",
     CKS_LANH_DAO: "GD_TRANTHIKIMCUC_SIGNED_VALID",
+  },
+  {
+    ...createEmptyRecord("UNDER_18"),
+    id: "REC-DEMO03",
+    HO_TEN: "Phạm Minh Đức",
+    GIOI_TINH: 1, // Nam
+    NGAY_SINH: "201405100000", // 10/05/2014 (12 tuổi)
+    SO_CCCD: "", // No CCCD needed
+    NGUOI_GIAM_HO: "Phạm Văn Hùng", // Bố đẻ
+    SO_CCCD_NGUOI_GIAM_HO: "001080012345",
+    DIA_CHI: "Xã Đa Tốn, Huyện Gia Lâm, TP. Hà Nội",
+    MATINH_CU_TRU: "01",
+    MAXA_CU_TRU: "00115",
+    DIEN_THOAI: "0904999888",
+    LY_DO_VV: "Khám sức khỏe học sinh định kỳ",
+    MA_LK: "LK-CHILD03",
+    MA_CSKCB: "01045",
+    MA_GTIN_CSKCB: "Phòng khám Đa khoa Gia Lâm",
+    NGAY_VAO: "202605201000",
+    TSGD_MAC_BENH: 0,
+    TSGD_TEN_BENH: "",
+    SAN_KHOA: 1,
+    TIEM_CHUNG_BCG: 1,
+    TIEM_CHUNG_BH_HG_UV: 1,
+    TIEM_CHUNG_SOI: 1,
+    TIEM_CHUNG_BAI_LIET: 1,
+    TIEM_CHUNG_VNNB_B: 1,
+    TIEM_CHUNG_VGB: 1,
+    TIEM_CHUNG_CAC_LOAI_KHAC: 0,
+    TIEM_CHUNG_VAC_XIN_KHAC: "",
+    MA_TSBT: 0,
+    TSBT_TEN_BENH: "",
+    CO_DANG_DIEU_TRI_BENH: 0,
+    TEN_BENH_DANG_DIEU_TRI: "",
+    CHIEU_CAO: "148.0",
+    CAN_NANG: "41.0",
+    CHI_SO_BMI: "18.72",
+    MACH: "82",
+    HUYET_AP: "105/65",
+    KHAM_NHI_KHOA: 1,
+    NHI_KHOA_TUAN_HOAN: "Tiếng tim đều, rõ, không âm bệnh lý",
+    NHI_KHOA_HO_HAP: "Phế nang rì rào êm dịu, không rale",
+    NHI_KHOA_TIEU_HOA: "Bụng mềm, gan lách không to",
+    NHI_KHOA_THAN_TIETNIEU: "Chưa phát hiện bất thường",
+    NHI_KHOA_THAN_KINH: "Phản xạ bình thường, không dấu thần kinh khu trú",
+    NHI_KHOA_TAM_THAN: "Phát triển tâm thần vận động phù hợp lứa tuổi",
+    NHI_KHOA_KHAC: 0,
+    KHAM_MAT: 1,
+    KHONG_KINH_MAT_PHAI: "10/10",
+    KHONG_KINH_MAT_TRAI: "10/10",
+    KET_LUAN_MAT: "Thị lực tốt",
+    KHAM_TAI_MUI_HONG: 1,
+    KET_LUAN_TAI_MUI_HONG: "Hố họng bình thường, tai sạch",
+    KHAM_RANG_HAM_MAT: 1,
+    KET_LUAN_RANG_HAM_MAT: "Răng sữa đang rụng, thay răng vĩnh viễn đều",
+    XET_NGHIEM_MAU: 0,
+    XET_NGHIEM_NUOC_TIEU: 0,
+    CHAN_DOAN_HINH_ANH: 0,
+    KET_LUAN_LOAI_SUC_KHOE: "Loại I",
+    KET_LUAN_CAC_VAN_DE_SUC_KHOE: "Trẻ phát triển thể chất và tinh thần tốt.",
+    CKS_NGUOI_KET_LUAN: "BS_NGUYENTHILINH_SIGNED",
+    CKS_BENH_VIEN: "PK_DK_GIALAM_SIGNED",
   }
 ];

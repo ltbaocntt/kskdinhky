@@ -8,7 +8,7 @@ import { HealthRecord, createEmptyRecord } from "../types";
 import { 
   ArrowLeft, ArrowRight, Save, User, ShieldCheck, Heart, 
   Stethoscope, FileCode, Check, AlertCircle, RefreshCw, PenTool,
-  Smartphone, Building2, Lock, Search, MapPin
+  Smartphone, Building2, Lock, Search, MapPin, Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import SmartCASignerModal from "./SmartCASignerModal";
@@ -337,6 +337,52 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                   <p className="text-xs text-slate-500">Thông tin cá nhân được ghi nhận theo căn cước công dân hoặc BHYT.</p>
                 </div>
 
+                {/* Bộ Chọn Mẫu Tờ Khai Sức Khỏe theo Tuổi */}
+                <div className="bg-blue-50/50 p-4 border border-blue-100 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                  <div>
+                    <span className="font-bold text-slate-800 text-sm block">Chọn mẫu tờ khai khám sức khỏe</span>
+                    <span className="text-slate-500 text-[11px]">Hệ thống hỗ trợ tự động định hình nội dung khám phù hợp với độ tuổi.</span>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleChange("KIEU_MAU", "UNDER_18");
+                        handleChange("KHAM_NHI_KHOA", 1);
+                        handleChange("KHAM_NOI_KHOA", 0);
+                        handleChange("KHAM_NGOI_KHOA", 0);
+                        handleChange("KHAM_DA_LIEU", 0);
+                        handleChange("KHAM_SAN_PHU_KHOA", 0);
+                      }}
+                      className={`flex-1 md:flex-none px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                        record.KIEU_MAU !== "OVER_19"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      Mẫu dưới 18 tuổi (Học sinh/Trẻ em)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleChange("KIEU_MAU", "OVER_19");
+                        handleChange("KHAM_NHI_KHOA", 0);
+                        handleChange("KHAM_NOI_KHOA", 1);
+                        handleChange("KHAM_NGOI_KHOA", 1);
+                        handleChange("KHAM_DA_LIEU", 1);
+                        handleChange("KHAM_SAN_PHU_KHOA", record.GIOI_TINH === 2 ? 1 : 0);
+                      }}
+                      className={`flex-1 md:flex-none px-4 py-2 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                        record.KIEU_MAU === "OVER_19"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      Mẫu từ 18 tuổi trở lên (Công đoàn/Người lớn)
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* HO_TEN */}
                   <div>
@@ -349,7 +395,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                       onChange={(e) => handleChange("HO_TEN", e.target.value)}
                       placeholder="NGUYỄN VĂN A"
                       className={`w-full text-sm py-2 px-3 border rounded-lg focus:outline-none focus:ring-2 uppercase ${
-                        errors.HO_TEN ? "border-red-305 focus:ring-red-200" : "border-slate-300 focus:ring-blue-100"
+                        errors.HO_TEN ? "border-red-350 focus:ring-red-200" : "border-slate-300 focus:ring-blue-100"
                       }`}
                       id="input-ho-ten"
                     />
@@ -363,7 +409,13 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                     </label>
                     <select
                       value={record.GIOI_TINH}
-                      onChange={(e) => handleChange("GIOI_TINH", parseInt(e.target.value))}
+                      onChange={(e) => {
+                        const gender = parseInt(e.target.value);
+                        handleChange("GIOI_TINH", gender);
+                        if (record.KIEU_MAU === "OVER_19") {
+                          handleChange("KHAM_SAN_PHU_KHOA", gender === 2 ? 1 : 0);
+                        }
+                      }}
                       className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 bg-white"
                       id="input-gioi-tinh"
                     >
@@ -386,6 +438,28 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                           const newD = { ...birthDateVals, date: e.target.value };
                           setBirthDateVals(newD);
                           handleChange("NGAY_SINH", compileDatetimeField(newD.date, newD.time));
+                          
+                          // Smart Template Auto-selector based on Birth Year!
+                          if (newD.date) {
+                            const birthYear = new Date(newD.date).getFullYear();
+                            const currentYear = new Date().getFullYear();
+                            const age = currentYear - birthYear;
+                            if (age >= 18 && record.KIEU_MAU !== "OVER_19") {
+                              handleChange("KIEU_MAU", "OVER_19");
+                              handleChange("KHAM_NHI_KHOA", 0);
+                              handleChange("KHAM_NOI_KHOA", 1);
+                              handleChange("KHAM_NGOI_KHOA", 1);
+                              handleChange("KHAM_DA_LIEU", 1);
+                              handleChange("KHAM_SAN_PHU_KHOA", record.GIOI_TINH === 2 ? 1 : 0);
+                            } else if (age < 18 && record.KIEU_MAU !== "UNDER_18") {
+                              handleChange("KIEU_MAU", "UNDER_18");
+                              handleChange("KHAM_NHI_KHOA", 1);
+                              handleChange("KHAM_NOI_KHOA", 0);
+                              handleChange("KHAM_NGOI_KHOA", 0);
+                              handleChange("KHAM_DA_LIEU", 0);
+                              handleChange("KHAM_SAN_PHU_KHOA", 0);
+                            }
+                          }
                         }}
                         className={`flex-1 text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 ${
                           errors.NGAY_SINH ? "border-red-300" : ""
@@ -404,7 +478,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                       />
                     </div>
                     <span className="text-[10px] text-slate-450 mt-1 block">
-                      Lưu ý: Nếu không rõ giờ sinh, mặc định là 00:00 (lưu dạng yyyyMMdd0000)
+                      Lưu ý: Hệ thống sẽ tự kiểm tra để gợi ý mẫu tờ khai thích hợp nếu thay đổi năm sinh. Mặc định giờ: 00:00
                     </span>
                     {errors.NGAY_SINH && <p className="text-red-500 text-[11px] mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.NGAY_SINH}</p>}
                   </div>
@@ -421,7 +495,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                       onChange={(e) => handleChange("SO_CCCD", e.target.value.replace(/\s+/g, ""))}
                       placeholder="Ghi 12 số định danh hoặc số căn cước"
                       className={`w-full text-sm py-2 px-3 border rounded-lg focus:outline-none focus:ring-2 font-mono ${
-                        errors.SO_CCCD ? "border-red-305 focus:ring-red-100" : "border-slate-300 focus:ring-blue-100"
+                        errors.SO_CCCD ? "border-red-350 focus:ring-red-100" : "border-slate-300 focus:ring-blue-100"
                       }`}
                       id="input-so-cccd"
                     />
@@ -431,7 +505,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                   {/* NGUOI_GIAM_HO */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Người giám hộ (Nếu có)
+                      Người giám hộ (Nếu là trẻ dưới 18 tuổi)
                     </label>
                     <input
                       type="text"
@@ -445,7 +519,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                   {/* SO_CCCD_NGUOI_GIAM_HO */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      CCCD Người giám hộ (max 15 ký tự)
+                      CCCD Người giám hộ (nếu có)
                     </label>
                     <input
                       type="text"
@@ -498,7 +572,7 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                       onChange={(e) => handleChange("DIA_CHI", e.target.value)}
                       placeholder="Số nhà, đường, thôn xóm, xã phường, quận huyện, tỉnh thành"
                       className={`w-full text-sm py-2 px-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                        errors.DIA_CHI ? "border-red-305" : "border-slate-300"
+                        errors.DIA_CHI ? "border-red-350" : "border-slate-300"
                       }`}
                     />
                   </div>
@@ -726,6 +800,107 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                     />
                   </div>
                 </div>
+
+                {/* Các trường nghiệp vụ của Mẫu từ 18 tuổi trở lên */}
+                {record.KIEU_MAU === "OVER_19" && (
+                  <div className="border bg-slate-50/30 border-slate-200/80 p-5 rounded-2xl space-y-4 shadow-xs mt-6">
+                    <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-l-3 border-blue-600 pl-2.5 flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-blue-600" />
+                      Thông tin nghề nghiệp & lịch sử công tác (Dành cho người từ 18 tuổi trở lên)
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* MA_NGHE_NGHIEP */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center gap-1.5">
+                          Mã nghề nghiệp (Thông tư 17)
+                        </label>
+                        <select
+                          value={record.MA_NGHE_NGHIEP || "00"}
+                          onChange={(e) => handleChange("MA_NGHE_NGHIEP", e.target.value)}
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg bg-white"
+                        >
+                          <option value="00">Mã "00" - Chưa có thông tin / Thất nghiệp</option>
+                          <option value="01">Mã "01" - Cán bộ hành chính công sở</option>
+                          <option value="02">Mã "02" - Kỹ sư, chuyên gia công nghệ</option>
+                          <option value="03">Mã "03" - Công nhân sản xuất công nghiệp nặng</option>
+                          <option value="04">Mã "04" - Người làm nông, lâm, ngư nghiệp</option>
+                          <option value="05">Mã "05" - Học sinh, sinh viên đại học/cao đẳng</option>
+                          <option value="06">Mã "06" - Lực lượng vũ trang / Công an / Quân đội</option>
+                          <option value="07">Mã "07" - Nhân viên y tế phụ trợ</option>
+                          <option value="08">Mã "08" - Các ngành nghề dịch vụ khác</option>
+                        </select>
+                      </div>
+
+                      {/* NOI_CONG_TAC_HIEN_TAI */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                          Nơi công tác, học tập hiện tại
+                        </label>
+                        <input
+                          type="text"
+                          value={record.NOI_CONG_TAC_HIEN_TAI || ""}
+                          onChange={(e) => handleChange("NOI_CONG_TAC_HIEN_TAI", e.target.value)}
+                          placeholder="Ví dụ: Công ty TNHH Phần mềm ABC"
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none"
+                        />
+                      </div>
+
+                      {/* NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                          Ngày bắt đầu làm việc hiện tại
+                        </label>
+                        <input
+                          type="date"
+                          value={record.NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI ? parseDateField(record.NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI) : ""}
+                          onChange={(e) => handleChange("NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI", compileDateField(e.target.value))}
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none font-mono"
+                        />
+                      </div>
+
+                      {/* NOI_CONG_TAC_TRUOC_DAY */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                          Nghề nghiệp hoặc công việc trước đây (nếu có)
+                        </label>
+                        <input
+                          type="text"
+                          value={record.NOI_CONG_TAC_TRUOC_DAY || ""}
+                          onChange={(e) => handleChange("NOI_CONG_TAC_TRUOC_DAY", e.target.value)}
+                          placeholder="Nhập nghề nghiệp hoặc đơn vị công tác cũ"
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none"
+                        />
+                      </div>
+
+                      {/* NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                          Ngày bắt đầu làm công việc cũ đó
+                        </label>
+                        <input
+                          type="date"
+                          value={record.NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY ? parseDateField(record.NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY) : ""}
+                          onChange={(e) => handleChange("NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY", compileDateField(e.target.value))}
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none font-mono"
+                        />
+                      </div>
+
+                      {/* NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY */}
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                          Ngày kết thúc làm công việc cũ đó
+                        </label>
+                        <input
+                          type="date"
+                          value={record.NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY ? parseDateField(record.NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY) : ""}
+                          onChange={(e) => handleChange("NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY", compileDateField(e.target.value))}
+                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg focus:outline-none font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -867,74 +1042,260 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                   </div>
                 </div>
 
-                {/* Personal & Ophthalmic */}
+                {/* Personal & Obstetric / Sickness History */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Sản khoa */}
-                  <div className="border p-4 rounded-xl space-y-3 bg-slate-50/20">
-                    <h4 className="font-bold text-xs uppercase text-slate-600 border-b pb-1">A. Sản khoa (Nếu có)</h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Trạng thái sản khoa</label>
-                        <select
-                          value={record.SAN_KHOA}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value);
-                            handleChange("SAN_KHOA", val);
-                            if (val === 1) handleChange("BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG", "");
-                          }}
-                          className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg"
-                        >
-                          <option value={1}>Mã "1": Bình thường</option>
-                          <option value={0}>Mã "0": Bất thường</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Bệnh sản khoa (ICD-10)</label>
-                        <input
-                          type="text"
-                          disabled={record.SAN_KHOA === 1}
-                          value={record.BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG}
-                          onChange={(e) => handleChange("BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG", e.target.value)}
-                          placeholder="Mã ICD-10 phân cách bằng ;"
-                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase"
-                        />
+                  {/* Cột 1: Sản khoa hoặc Sản phụ khoa người lớn */}
+                  {record.KIEU_MAU === "OVER_19" ? (
+                    <div className="border p-4 rounded-xl space-y-3 bg-rose-50/10 border-rose-200">
+                      <h4 className="font-bold text-xs uppercase text-rose-800 border-b pb-1 flex items-center gap-1.5">
+                        <Heart className="w-3.5 h-3.5 text-rose-600" />
+                        A. Tiền sử Sản Phụ Khoa người lớn
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 gap-2.5 text-xs">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">Tuổi bắt đầu có kinh</label>
+                            <input
+                              type="number"
+                              value={record.CO_KINH_NGUYET_NAM_BAO_NHIEU_TUOI || ""}
+                              onChange={(e) => handleChange("CO_KINH_NGUYET_NAM_BAO_NHIEU_TUOI", e.target.value ? parseInt(e.target.value) : "")}
+                              placeholder="Ví dụ: 13"
+                              className="w-full text-sm py-1.5 px-2 border rounded bg-white text-center"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">Tính chất kinh nguyệt</label>
+                            <select
+                              value={record.TINH_CHAT_KINH_NGUYET ?? 1}
+                              onChange={(e) => handleChange("TINH_CHAT_KINH_NGUYET", parseInt(e.target.value))}
+                              className="w-full text-xs py-1.5 px-2 border rounded bg-white"
+                            >
+                              <option value={1}>1: Đều đặn</option>
+                              <option value={0}>0: Không đều (Rối loạn)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <label className="block text-[10px] text-slate-600 font-medium mb-1">Chu kỳ (ngày)</label>
+                            <input
+                              type="text"
+                              value={record.CHU_KY_KINH || ""}
+                              onChange={(e) => handleChange("CHU_KY_KINH", e.target.value)}
+                              placeholder="28-30"
+                              className="w-full text-xs py-1.5 px-2 border rounded bg-white text-center"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-600 font-medium mb-1">Lượng kinh</label>
+                            <input
+                              type="text"
+                              value={record.LUONG_KINH || ""}
+                              onChange={(e) => handleChange("LUONG_KINH", e.target.value)}
+                              placeholder="Vừa phải"
+                              className="w-full text-xs py-1.5 px-2 border rounded bg-white text-center"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-600 font-medium mb-1">Đau bụng kinh</label>
+                            <select
+                              value={record.DAU_BUNG_KINH ?? 0}
+                              onChange={(e) => handleChange("DAU_BUNG_KINH", parseInt(e.target.value))}
+                              className="w-full text-[11px] py-1.5 px-1 border rounded bg-white text-center"
+                            >
+                              <option value={0}>0: Không</option>
+                              <option value={1}>1: Có đau</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 border-t pt-2">
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">Đã lập gia đình?</label>
+                            <select
+                              value={record.DA_LAP_GIA_DINH ?? 0}
+                              onChange={(e) => handleChange("DA_LAP_GIA_DINH", parseInt(e.target.value))}
+                              className="w-full text-xs py-1.5 px-2 border rounded bg-white"
+                            >
+                              <option value={0}>0: Chưa lập gia đình</option>
+                              <option value={1}>1: Đã lập gia đình</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">Số lần mổ SPK</label>
+                            <input
+                              type="number"
+                              value={record.SO_LAN_MO_SAN_PHU_KHOA ?? 0}
+                              onChange={(e) => handleChange("SO_LAN_MO_SAN_PHU_KHOA", parseInt(e.target.value) || 0)}
+                              className="w-full text-sm py-1.5 px-2 border rounded bg-white text-center font-mono font-bold text-slate-700"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">Chỉ số PARA (Sinh-Sớm-Sảy-Sống)</label>
+                            <input
+                              type="text"
+                              maxLength={4}
+                              value={record.PARA || ""}
+                              onChange={(e) => handleChange("PARA", e.target.value.replace(/\D/g, ""))}
+                              placeholder="VD: 2002"
+                              className="w-full text-sm py-1.5 px-2 border rounded bg-white text-center font-mono font-bold tracking-widest text-emerald-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">Tránh thai (BPTT)</label>
+                            <select
+                              value={record.CO_BPTT_KHONG ?? 0}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                handleChange("CO_BPTT_KHONG", val);
+                                if (val === 0) handleChange("BIEN_PHAP_TRANH_THAI", "");
+                              }}
+                              className="w-full text-xs py-1.5 px-2 border rounded bg-white"
+                            >
+                              <option value={0}>0: Không sử dụng</option>
+                              <option value={1}>1: Có sử dụng</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {record.CO_BPTT_KHONG === 1 && (
+                          <div>
+                            <label className="block text-slate-500 mb-1">Tên biện pháp tránh thai đang dùng</label>
+                            <input
+                              type="text"
+                              value={record.BIEN_PHAP_TRANH_THAI || ""}
+                              onChange={(e) => handleChange("BIEN_PHAP_TRANH_THAI", e.target.value)}
+                              placeholder="Đặt vòng, Bao cao su, Thuốc tránh thai..."
+                              className="w-full p-1.5 border rounded"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="border p-4 rounded-xl space-y-3 bg-slate-50/20">
+                      <h4 className="font-bold text-xs uppercase text-slate-600 border-b pb-1">A. Sản khoa nhi đồng (Nếu có)</h4>
+                      <div className="grid grid-cols-1 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Trạng thái sản khoa</label>
+                          <select
+                            value={record.SAN_KHOA}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              handleChange("SAN_KHOA", val);
+                              if (val === 1) handleChange("BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG", "");
+                            }}
+                            className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg"
+                          >
+                            <option value={1}>Mã "1": Bình thường</option>
+                            <option value={0}>Mã "0": Bất thường</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Bệnh sản khoa (ICD-10)</label>
+                          <input
+                            type="text"
+                            disabled={record.SAN_KHOA === 1}
+                            value={record.BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG}
+                            onChange={(e) => handleChange("BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG", e.target.value)}
+                            placeholder="Mã ICD-10 phân cách bằng ;"
+                            className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Bệnh tật bản thân */}
+                  {/* Cột 2: Tiền sử bệnh bản thân & Bệnh nghề nghiệp */}
                   <div className="border p-4 rounded-xl space-y-4 bg-slate-50/20">
-                    <h4 className="font-bold text-xs uppercase text-slate-600 border-b pb-1">B. Tiền sử bệnh tật bản thân</h4>
-                    <div className="grid grid-cols-1 gap-3.5">
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Mã TSBT truyền nhiễm</label>
-                        <select
-                          value={record.MA_TSBT}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value);
-                            handleChange("MA_TSBT", val);
-                            if (val === 0) handleChange("TSBT_TEN_BENH", "");
-                          }}
-                          className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
-                        >
-                          <option value={0}>0: Không bệnh</option>
-                          <option value={1}>1: Có bệnh</option>
-                        </select>
+                    <h4 className="font-bold text-xs uppercase text-slate-600 border-b pb-1">
+                      B. Tiền sử bệnh tật bản thân & gánh nặng bệnh lý
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Truyền nhiễm (Phát hiện)</label>
+                          <select
+                            value={record.MA_TSBT}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              handleChange("MA_TSBT", val);
+                              if (val === 0) {
+                                handleChange("TSBT_TEN_BENH", "");
+                                handleChange("TSBT_NAM_PHAT_HIEN_BENH", "");
+                              }
+                            }}
+                            className="w-full text-xs py-2 px-2 border border-slate-300 bg-white rounded-lg focus:outline-none"
+                          >
+                            <option value={0}>0: Không bệnh</option>
+                            <option value={1}>1: Có bệnh truyền nhiễm</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Số mã ICD-10 truyền nhiễm</label>
+                          <input
+                            type="text"
+                            disabled={record.MA_TSBT === 0}
+                            value={record.TSBT_TEN_BENH}
+                            onChange={(e) => handleChange("TSBT_TEN_BENH", e.target.value)}
+                            placeholder="Mã ICD-10"
+                            className="w-full text-xs py-2 px-2 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase focus:outline-none"
+                          />
+                        </div>
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Chi tiết bệnh (ICD-10)</label>
-                        <input
-                          type="text"
-                          disabled={record.MA_TSBT === 0}
-                          value={record.TSBT_TEN_BENH}
-                          onChange={(e) => handleChange("TSBT_TEN_BENH", e.target.value)}
-                          placeholder="Mã ICD-10"
-                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
-                        />
-                      </div>
+                      {record.KIEU_MAU === "OVER_19" && (
+                        <div className="border-t pt-2.5 mt-1 space-y-3 bg-blue-50/20 p-2.5 rounded border border-blue-100 text-xs">
+                          <span className="font-bold text-[11px] text-blue-700 block uppercase">Bệnh lý nghề nghiệp người lớn</span>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[10px] text-slate-500 font-medium mb-1">Năm phát hiện bệnh bản thân</label>
+                              <input
+                                type="text"
+                                maxLength={4}
+                                value={record.TSBT_NAM_PHAT_HIEN_BENH || ""}
+                                onChange={(e) => handleChange("TSBT_NAM_PHAT_HIEN_BENH", e.target.value.replace(/\D/g, ""))}
+                                placeholder="Ví dụ: 2021"
+                                className="w-full p-1.5 border rounded text-center font-mono"
+                              />
+                            </div>
 
-                      <div>
+                            <div>
+                              <label className="block text-[10px] text-slate-500 font-medium mb-1">Năm phát hiện bệnh NN</label>
+                              <input
+                                type="text"
+                                maxLength={4}
+                                value={record.TSBT_NAM_PHAT_HIEN_BENH_NGHE_NGHIEP || ""}
+                                onChange={(e) => handleChange("TSBT_NAM_PHAT_HIEN_BENH_NGHE_NGHIEP", e.target.value.replace(/\D/g, ""))}
+                                placeholder="Ví dụ: 2023"
+                                className="w-full p-1.5 border rounded text-center font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] text-slate-500 font-medium mb-1">Tên bệnh nghề nghiệp mắc phải</label>
+                            <input
+                              type="text"
+                              value={record.TSBT_TEN_BENH_NGHE_NGHIEP || ""}
+                              onChange={(e) => handleChange("TSBT_TEN_BENH_NGHE_NGHIEP", e.target.value)}
+                              placeholder="Ví dụ: Bệnh bụi phổi silic, điếc nghề nghiệp..."
+                              className="w-full p-1.5 border rounded"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="border-t pt-2.5">
                         <label className="block text-xs font-medium text-slate-600 mb-1">Đang điều trị bệnh?</label>
                         <select
                           value={record.CO_DANG_DIEU_TRI_BENH}
@@ -946,35 +1307,37 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                               handleChange("TEN_THUOC", "");
                             }
                           }}
-                          className="w-full text-sm py-2 px-3 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
+                          className="w-full text-xs py-2 px-3 border border-slate-300 bg-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
                         >
                           <option value={0}>Mã "0": Không</option>
                           <option value={1}>Mã "1": Có</option>
                         </select>
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Mã bệnh đang điều trị</label>
-                        <input
-                          type="text"
-                          disabled={record.CO_DANG_DIEU_TRI_BENH === 0}
-                          value={record.TEN_BENH_DANG_DIEU_TRI}
-                          onChange={(e) => handleChange("TEN_BENH_DANG_DIEU_TRI", e.target.value)}
-                          placeholder="Mã ICD-10"
-                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
-                        />
-                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Mã bệnh đ.trị</label>
+                          <input
+                            type="text"
+                            disabled={record.CO_DANG_DIEU_TRI_BENH === 0}
+                            value={record.TEN_BENH_DANG_DIEU_TRI}
+                            onChange={(e) => handleChange("TEN_BENH_DANG_DIEU_TRI", e.target.value)}
+                            placeholder="Mã ICD-10"
+                            className="w-full text-xs py-1.5 px-2 border border-slate-300 rounded-lg disabled:bg-slate-50 uppercase font-mono font-semibold"
+                          />
+                        </div>
 
-                      <div>
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Tên thuốc đang sử dụng điều trị</label>
-                        <input
-                          type="text"
-                          disabled={record.CO_DANG_DIEU_TRI_BENH === 0}
-                          value={record.TEN_THUOC}
-                          onChange={(e) => handleChange("TEN_THUOC", e.target.value)}
-                          placeholder="Nhập chi tiết biệt dược, liều lượng dùng"
-                          className="w-full text-sm py-2 px-3 border border-slate-300 rounded-lg disabled:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-800"
-                        />
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">Tên thuốc đang dùng</label>
+                          <input
+                            type="text"
+                            disabled={record.CO_DANG_DIEU_TRI_BENH === 0}
+                            value={record.TEN_THUOC}
+                            onChange={(e) => handleChange("TEN_THUOC", e.target.value)}
+                            placeholder="Biệt dược, hàm lượng"
+                            className="w-full text-xs py-1.5 px-2 border border-slate-300 rounded-lg disabled:bg-slate-50"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1183,131 +1546,327 @@ export default function RecordForm({ initialRecord, onSave, onCancel }: RecordFo
                   <p className="text-xs text-slate-500">Kích hoạt và điền kết luận bộ phận khám mắt, tai mũi họng, răng hàm mặt & khám nhi khoa tương tự văn bản mẫu.</p>
                 </div>
 
-                {/* Pediatrics section */}
-                <div className="border p-4 rounded-xl space-y-4 bg-slate-50/20">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <h4 className="font-bold text-sm uppercase text-blue-800 flex items-center gap-2">
-                      <Stethoscope className="w-4 h-4 text-blue-600" />
-                      A. Khám Nhi Khoa
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500">Có khám chuyên khoa Nhi:</span>
-                      <select
-                        value={record.KHAM_NHI_KHOA}
-                        onChange={(e) => handleChange("KHAM_NHI_KHOA", parseInt(e.target.value))}
-                        className="text-xs p-1 border rounded bg-white font-medium"
-                      >
-                        <option value={0}>Không (Mã 0)</option>
-                        <option value={1}>Có khám (Mã 1)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {record.KHAM_NHI_KHOA === 1 && (
-                    <motion.div 
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs"
-                    >
-                      <div>
-                        <label className="block text-slate-500 font-medium mb-1">Tuần hoàn</label>
-                        <input
-                          type="text"
-                          value={record.NHI_KHOA_TUAN_HOAN}
-                          onChange={(e) => handleChange("NHI_KHOA_TUAN_HOAN", e.target.value)}
-                          placeholder="Tuần hoàn đều, T1, T2 rõ"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 font-medium mb-1">Hô hấp</label>
-                        <input
-                          type="text"
-                          value={record.NHI_KHOA_HO_HAP}
-                          onChange={(e) => handleChange("NHI_KHOA_HO_HAP", e.target.value)}
-                          placeholder="Rì rào phế nang êm dịu"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 font-medium mb-1">Tiêu hóa</label>
-                        <input
-                          type="text"
-                          value={record.NHI_KHOA_TIEU_HOA}
-                          onChange={(e) => handleChange("NHI_KHOA_TIEU_HOA", e.target.value)}
-                          placeholder="Bụng mềm, gan lách không to"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 font-medium mb-1">Thận - tiết niệu</label>
-                        <input
-                          type="text"
-                          value={record.NHI_KHOA_THAN_TIETNIEU}
-                          onChange={(e) => handleChange("NHI_KHOA_THAN_TIETNIEU", e.target.value)}
-                          placeholder="Hố thận không sưng, chạm thận âm tính"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 font-medium mb-1">Thần kinh</label>
-                        <input
-                          type="text"
-                          value={record.NHI_KHOA_THAN_KINH}
-                          onChange={(e) => handleChange("NHI_KHOA_THAN_KINH", e.target.value)}
-                          placeholder="Phản xạ gân xương bình thường"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-500 font-medium mb-1">Tâm thần</label>
-                        <input
-                          type="text"
-                          value={record.NHI_KHOA_TAM_THAN}
-                          onChange={(e) => handleChange("NHI_KHOA_TAM_THAN", e.target.value)}
-                          placeholder="Tỉnh táo, tiếp xúc tốt"
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-
-                      <div className="md:col-span-2 border-t pt-2 gap-2 grid grid-cols-3 bg-slate-100/40 p-2.5 rounded">
-                        <div>
-                          <label className="block text-slate-500 font-medium mb-1">Có nội dung khám nhi khác?</label>
+                {/* Clinical Specialties for Under-18 (Pediatrics) OR Over-18 (Internal/Surgery/Derma/Gynae) */}
+                {record.KIEU_MAU === "OVER_19" ? (
+                  <div className="space-y-4">
+                    {/* 1. KHÁM NỘI KHOA */}
+                    <div className="border p-4 rounded-xl space-y-4 bg-slate-50/20 border-slate-205">
+                      <div className="flex justify-between items-center border-b pb-2">
+                        <h4 className="font-bold text-sm uppercase text-blue-800 flex items-center gap-2">
+                          <Stethoscope className="w-4 h-4 text-blue-600" />
+                          A1. Khám Nội Khoa chuyên sâu
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500">Khám Nội:</span>
                           <select
-                            value={record.NHI_KHOA_KHAC}
-                            onChange={(e) => handleChange("NHI_KHOA_KHAC", parseInt(e.target.value))}
-                            className="w-full p-1.5 border rounded bg-white"
+                            value={record.KHAM_NOI_KHOA ?? 1}
+                            onChange={(e) => handleChange("KHAM_NOI_KHOA", parseInt(e.target.value))}
+                            className="text-xs p-1 border rounded bg-white font-medium"
                           >
-                            <option value={0}>Không</option>
-                            <option value={1}>Có</option>
+                            <option value={1}>Có khám (Mã 1)</option>
+                            <option value={0}>Không (Mã 0)</option>
                           </select>
                         </div>
-                        <div>
-                          <label className="block text-slate-500 font-medium mb-1">Tên khám nhi khác</label>
-                          <input
-                            type="text"
-                            disabled={record.NHI_KHOA_KHAC === 0}
-                            value={record.TEN_LOAI_KHAM_NHI_KHOA_KHAC}
-                            onChange={(e) => handleChange("TEN_LOAI_KHAM_NHI_KHOA_KHAC", e.target.value)}
-                            placeholder="Tên khám khác"
-                            className="w-full p-1.5 border rounded"
-                          />
+                      </div>
+
+                      {record.KHAM_NOI_KHOA !== 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">1. Tuần hoàn (Hệ tim mạch)</label>
+                            <input
+                              type="text"
+                              value={record.NOI_KHOA_TUAN_HOAN || ""}
+                              onChange={(e) => handleChange("NOI_KHOA_TUAN_HOAN", e.target.value)}
+                              placeholder="Tiếng tim T1 T2 rõ, không âm bệnh lý"
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">2. Hô hấp (Hệ lồng ngực)</label>
+                            <input
+                              type="text"
+                              value={record.NOI_KHOA_HO_HAP || ""}
+                              onChange={(e) => handleChange("NOI_KHOA_HO_HAP", e.target.value)}
+                              placeholder="Rì rào phế nang hai phế trường rõ"
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">3. Tiêu hóa (Hệ thành bụng)</label>
+                            <input
+                              type="text"
+                              value={record.NOI_KHOA_TIEU_HOA || ""}
+                              onChange={(e) => handleChange("NOI_KHOA_TIEU_HOA", e.target.value)}
+                              placeholder="Bụng mềm, không u cục, lách/gan không sờ thấy"
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">4. Thận - Tiết Niệu (Hố thận)</label>
+                            <input
+                              type="text"
+                              value={record.NOI_KHOA_THAN_TIETNIEU || ""}
+                              onChange={(e) => handleChange("NOI_KHOA_THAN_TIETNIEU", e.target.value)}
+                              placeholder="Nước tiểu trong, không phát hiện bệnh tiết niệu"
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">5. Cơ - Xương - Khớp</label>
+                            <input
+                              type="text"
+                              value={record.NOI_KHOA_CO_XUONG_KHOP || ""}
+                              onChange={(e) => handleChange("NOI_KHOA_CO_XUONG_KHOP", e.target.value)}
+                              placeholder="Biên độ vận động khớp bình thường"
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-600 font-medium mb-1">6. Thần kinh (Vận động/Phản xạ)</label>
+                            <input
+                              type="text"
+                              value={record.NOI_KHOA_THAN_KINH || ""}
+                              onChange={(e) => handleChange("NOI_KHOA_THAN_KINH", e.target.value)}
+                              placeholder="Cảm giác bình thường, không liệt khu trú"
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-slate-600 font-medium mb-1">7. Tâm thần (Tinh thần/Trí tuệ)</label>
+                            <input
+                              type="text"
+                              value={record.NOI_KHOA_TAM_THAN || ""}
+                              onChange={(e) => handleChange("NOI_KHOA_TAM_THAN", e.target.value)}
+                              placeholder="Tỉnh tá, tiếp xúc tốt, không hoang tưởng"
+                              className="w-full p-2 border rounded"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-slate-500 font-medium mb-1">Kết quả khám nhi khác</label>
-                          <input
-                            type="text"
-                            disabled={record.NHI_KHOA_KHAC === 0}
-                            value={record.KET_QUA_KHAM_NHI_KHOA_KHAC}
-                            onChange={(e) => handleChange("KET_QUA_KHAM_NHI_KHOA_KHAC", e.target.value)}
-                            placeholder="Kết quả nhận xét"
-                            className="w-full p-1.5 border rounded"
-                          />
+                      )}
+                    </div>
+
+                    {/* 2. KHÁM NGOẠI KHOA & DA LIỄU */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Khám Ngoại Khoa */}
+                      <div className="border p-4 rounded-xl space-y-3 bg-slate-50/20 border-slate-205">
+                        <div className="flex justify-between items-center border-b pb-1.5">
+                          <h4 className="font-bold text-xs uppercase text-slate-800 flex items-center gap-1.5">
+                            <Activity className="w-3.5 h-3.5 text-blue-500" />
+                            A2. Khám Ngoại Khoa (Cơ học)
+                          </h4>
+                          <select
+                            value={record.KHAM_NGOI_KHOA ?? 1}
+                            onChange={(e) => handleChange("KHAM_NGOI_KHOA", parseInt(e.target.value))}
+                            className="text-[10px] p-1 border rounded bg-white font-bold"
+                          >
+                            <option value={1}>Có khám</option>
+                            <option value={0}>Không khám</option>
+                          </select>
+                        </div>
+                        {record.KHAM_NGOI_KHOA !== 0 && (
+                          <div>
+                            <label className="block text-[10px] text-slate-500 font-medium mb-1">Nhận xét ngoại khoa</label>
+                            <textarea
+                              rows={2}
+                              value={record.KET_QUA_KHAM_NGOI_KHOA || ""}
+                              onChange={(e) => handleChange("KET_QUA_KHAM_NGOI_KHOA", e.target.value)}
+                              placeholder="Không sẹo vết mổ cũ, không trĩ, không thoát vị bẹn..."
+                              className="w-full text-xs p-2 border rounded bg-white"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Khám Da Liễu */}
+                      <div className="border p-4 rounded-xl space-y-3 bg-slate-50/20 border-slate-205">
+                        <div className="flex justify-between items-center border-b pb-1.5">
+                          <h4 className="font-bold text-xs uppercase text-slate-800 flex items-center gap-1.5">
+                            <Activity className="w-3.5 h-3.5 text-blue-500" />
+                            A3. Khám Da Liễu (Tế bào/Bì)
+                          </h4>
+                          <select
+                            value={record.KHAM_DA_LIEU ?? 1}
+                            onChange={(e) => handleChange("KHAM_DA_LIEU", parseInt(e.target.value))}
+                            className="text-[10px] p-1 border rounded bg-white font-bold"
+                          >
+                            <option value={1}>Có khám</option>
+                            <option value={0}>Không khám</option>
+                          </select>
+                        </div>
+                        {record.KHAM_DA_LIEU !== 0 && (
+                          <div>
+                            <label className="block text-[10px] text-slate-500 font-medium mb-1">Nhận xét da liễu</label>
+                            <textarea
+                              rows={2}
+                              value={record.KET_QUA_KHAM_DA_LIEU || ""}
+                              onChange={(e) => handleChange("KET_QUA_KHAM_DA_LIEU", e.target.value)}
+                              placeholder="Da bình thường, không phát hiện tổn thương sùi, nấm..."
+                              className="w-full text-xs p-2 border rounded bg-white"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 3. KHÁM SẢN PHỤ KHOA (Visible for female or optionally available) */}
+                    <div className="border p-4 rounded-xl space-y-3 bg-rose-50/5 border-rose-200">
+                      <div className="flex justify-between items-center border-b pb-1.5">
+                        <h4 className="font-bold text-xs uppercase text-rose-800 flex items-center gap-1.5">
+                          <Heart className="w-3.5 h-3.5 text-rose-600" />
+                          A4. Khám Sản Phụ Khoa lâm sàng
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-slate-450 italic">(Cực kỳ thích hợp cho bệnh nhân Nữ)</span>
+                          <select
+                            value={record.KHAM_SAN_PHU_KHOA ?? 0}
+                            onChange={(e) => handleChange("KHAM_SAN_PHU_KHOA", parseInt(e.target.value))}
+                            className="text-[10px] p-1 border rounded bg-white font-bold text-rose-700"
+                          >
+                            <option value={0}>Không khám (Mã 0)</option>
+                            <option value={1}>Có khám (Mã 1)</option>
+                          </select>
                         </div>
                       </div>
-                    </motion.div>
-                  )}
-                </div>
+                      {record.KHAM_SAN_PHU_KHOA === 1 && (
+                        <div>
+                          <label className="block text-[11px] text-slate-600 font-bold mb-1">Kết quả khám lâm sàng sản phụ khoa</label>
+                          <textarea
+                            rows={2}
+                            value={record.KET_QUA_KHAM_SAN_PHU_KHOA || ""}
+                            onChange={(e) => handleChange("KET_QUA_KHAM_SAN_PHU_KHOA", e.target.value)}
+                            placeholder="Phần phụ mềm, âm đạo không bất thường, cổ tử cung nhẵn..."
+                            className="w-full text-xs p-2 border rounded bg-white font-medium text-slate-800"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border p-4 rounded-xl space-y-4 bg-slate-50/20">
+                    <div className="flex justify-between items-center border-b pb-2">
+                      <h4 className="font-bold text-sm uppercase text-blue-800 flex items-center gap-2">
+                        <Stethoscope className="w-4 h-4 text-blue-600" />
+                        A. Khám Nhi Khoa
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-500">Có khám chuyên khoa Nhi:</span>
+                        <select
+                          value={record.KHAM_NHI_KHOA}
+                          onChange={(e) => handleChange("KHAM_NHI_KHOA", parseInt(e.target.value))}
+                          className="text-xs p-1 border rounded bg-white font-medium"
+                        >
+                          <option value={0}>Không (Mã 0)</option>
+                          <option value={1}>Có khám (Mã 1)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {record.KHAM_NHI_KHOA === 1 && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs"
+                      >
+                        <div>
+                          <label className="block text-slate-500 font-medium mb-1">Tuần hoàn</label>
+                          <input
+                            type="text"
+                            value={record.NHI_KHOA_TUAN_HOAN}
+                            onChange={(e) => handleChange("NHI_KHOA_TUAN_HOAN", e.target.value)}
+                            placeholder="Tuần hoàn đều, T1, T2 rõ"
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-500 font-medium mb-1">Hô hấp</label>
+                          <input
+                            type="text"
+                            value={record.NHI_KHOA_HO_HAP}
+                            onChange={(e) => handleChange("NHI_KHOA_HO_HAP", e.target.value)}
+                            placeholder="Rì rào phế nang êm dịu"
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-500 font-medium mb-1">Tiêu hóa</label>
+                          <input
+                            type="text"
+                            value={record.NHI_KHOA_TIEU_HOA}
+                            onChange={(e) => handleChange("NHI_KHOA_TIEU_HOA", e.target.value)}
+                            placeholder="Bụng mềm, gan lách không to"
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-500 font-medium mb-1">Thận - tiết niệu</label>
+                          <input
+                            type="text"
+                            value={record.NHI_KHOA_THAN_TIETNIEU}
+                            onChange={(e) => handleChange("NHI_KHOA_THAN_TIETNIEU", e.target.value)}
+                            placeholder="Hố thận không sưng, chạm thận âm tính"
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-500 font-medium mb-1">Thần kinh</label>
+                          <input
+                            type="text"
+                            value={record.NHI_KHOA_THAN_KINH}
+                            onChange={(e) => handleChange("NHI_KHOA_THAN_KINH", e.target.value)}
+                            placeholder="Phản xạ gân xương bình thường"
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-500 font-medium mb-1">Tâm thần</label>
+                          <input
+                            type="text"
+                            value={record.NHI_KHOA_TAM_THAN}
+                            onChange={(e) => handleChange("NHI_KHOA_TAM_THAN", e.target.value)}
+                            placeholder="Tỉnh táo, tiếp xúc tốt"
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2 border-t pt-2 gap-2 grid grid-cols-3 bg-slate-100/40 p-2.5 rounded">
+                          <div>
+                            <label className="block text-slate-500 font-medium mb-1">Có nội dung khám nhi khác?</label>
+                            <select
+                              value={record.NHI_KHOA_KHAC}
+                              onChange={(e) => handleChange("NHI_KHOA_KHAC", parseInt(e.target.value))}
+                              className="w-full p-1.5 border rounded bg-white"
+                            >
+                              <option value={0}>Không</option>
+                              <option value={1}>Có</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-slate-500 font-medium mb-1">Tên khám nhi khác</label>
+                            <input
+                              type="text"
+                              disabled={record.NHI_KHOA_KHAC === 0}
+                              value={record.TEN_LOAI_KHAM_NHI_KHOA_KHAC}
+                              onChange={(e) => handleChange("TEN_LOAI_KHAM_NHI_KHOA_KHAC", e.target.value)}
+                              placeholder="Tên khám khác"
+                              className="w-full p-1.5 border rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-500 font-medium mb-1">Kết quả khám nhi khác</label>
+                            <input
+                              type="text"
+                              disabled={record.NHI_KHOA_KHAC === 0}
+                              value={record.KET_QUA_KHAM_NHI_KHOA_KHAC}
+                              onChange={(e) => handleChange("KET_QUA_KHAM_NHI_KHOA_KHAC", e.target.value)}
+                              placeholder="Kết quả nhận xét"
+                              className="w-full p-1.5 border rounded"
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
 
                 {/* Eyes section */}
                 <div className="border p-4 rounded-xl space-y-4 bg-slate-50/20">

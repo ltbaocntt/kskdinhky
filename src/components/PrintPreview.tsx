@@ -17,7 +17,8 @@ import {
   FileSignature,
   Building2,
   Cpu,
-  Lock
+  Lock,
+  Heart
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import SmartCASignerModal from "./SmartCASignerModal";
@@ -342,102 +343,243 @@ export default function PrintPreview({ record, onBack, onUpdateRecord }: PrintPr
           </div>
 
           <div className="space-y-4 text-sm">
-            {/* Fam Health */}
-            <div className="border-b pb-3">
-              <h3 className="font-bold text-slate-800 mb-1 text-xs uppercase tracking-wide">1. Tiền sử gia đình</h3>
-              <p>
-                <span className="text-slate-500">Người nhà có mắc bệnh bẩm sinh/truyền nhiễm không:</span>{" "}
-                <span className="font-semibold text-slate-800">{record.TSGD_MAC_BENH === 1 ? "Có" : "Không"}</span>
-              </p>
-              {record.TSGD_MAC_BENH === 1 && record.TSGD_TEN_BENH && (
-                <p className="mt-1">
-                  <span className="text-slate-500">Mã bệnh lâm sàng (ICD-10):</span>{" "}
-                  <span className="font-mono bg-red-50 text-red-700 px-1.5 py-0.5 rounded font-semibold text-xs border border-red-100">{record.TSGD_TEN_BENH}</span>
-                </p>
-              )}
-            </div>
+            {record.KIEU_MAU === "OVER_19" ? (
+              <>
+                {/* 1. Tiền sử nghề nghiệp */}
+                <div className="border-b pb-3">
+                  <h3 className="font-bold text-slate-800 mb-1 text-xs uppercase tracking-wide">1. Tiền sử lao động / nghề nghiệp</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                    <div>
+                      <span className="text-slate-500 font-medium">Nơi công tác hiện tại:</span>{" "}
+                      <span className="font-semibold text-slate-800">{record.NOI_CONG_TAC_HIEN_TAI || "---"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium font-mono">Mã nghề (GD):</span>{" "}
+                      <span className="font-semibold text-slate-800 font-mono bg-slate-100 py-0.5 px-1 rounded">{record.MA_NGHE_NGHIEP || "---"}</span>
+                    </div>
+                    <div className="md:col-span-2">
+                      <span className="text-slate-500 font-medium">Nơi làm việc trước đây (Công việc cũ):</span>{" "}
+                      <span className="font-semibold text-slate-800">{record.NOI_CONG_TAC_TRUOC_DAY || "---"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Ngày bắt đầu làm công việc hiện tại:</span>{" "}
+                      <span className="font-semibold text-slate-800 font-mono">{record.NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI ? formatDate(record.NGAY_BAT_DAU_LAM_VIEC_HIEN_TAI) : "---"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Ngày làm việc trước đây (Từ - Đến):</span>{" "}
+                      <span className="font-semibold text-slate-800 font-mono">
+                        {record.NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY ? formatDate(record.NGAY_BAT_DAU_LAM_VIEC_TRUOC_DAY) : "---"} - {record.NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY ? formatDate(record.NGAY_KET_THUC_LAM_VIEC_TRUOC_DAY) : "---"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Self Health */}
-            <div className="border-b pb-3">
-              <h3 className="font-bold text-slate-800 mb-1 text-xs uppercase tracking-wide">2. Tiền sử bản thân</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* 2. Tiền sử bệnh lý bản thân & bệnh nghề nghiệp */}
+                <div className="border-b pb-3">
+                  <h3 className="font-bold text-slate-800 mb-1 text-xs uppercase tracking-wide">2. Tiền sử bệnh tật bản thân & Bệnh nghề nghiệp</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-slate-500 font-medium">Tiền sử bệnh lý chung:</span>{" "}
+                      <span className="font-semibold text-slate-800">{record.MA_TSBT === 1 ? "Có bệnh lý" : "Khỏe mạnh, không phát hiện bệnh mãn tính"}</span>
+                      {record.MA_TSBT === 1 && record.TSBT_TEN_BENH && (
+                        <div className="mt-1 font-mono text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border inline-block select-all font-semibold">
+                          ICD-10: {record.TSBT_TEN_BENH} {record.TSBT_NAM_PHAT_HIEN_BENH ? `(Phát hiện năm ${record.TSBT_NAM_PHAT_HIEN_BENH})` : ""}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <span className="text-slate-500 font-medium">Bệnh nghề nghiệp đặc thù:</span>{" "}
+                      <span className="font-semibold text-slate-800">
+                        {record.TSBT_TEN_BENH_NGHE_NGHIEP ? `Có phát hiện năm ${record.TSBT_NAM_PHAT_HIEN_BENH_NGHE_NGHIEP || "---"}` : "Không phát hiện"}
+                      </span>
+                      {record.TSBT_TEN_BENH_NGHE_NGHIEP && (
+                        <div className="mt-1 font-semibold text-slate-800 bg-red-50 text-red-700 px-1.5 py-0.5 rounded border inline-block">
+                          Tên bệnh: {record.TSBT_TEN_BENH_NGHE_NGHIEP}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <span className="text-slate-500 font-medium">Hiện có đang điều trị bệnh mãn tính:</span>{" "}
+                      <span className="font-semibold text-slate-800">{record.CO_DANG_DIEU_TRI_BENH === 1 ? "Hiện đang điều trị" : "Không"}</span>
+                      {record.CO_DANG_DIEU_TRI_BENH === 1 && (
+                        <div className="mt-1 rounded bg-slate-50 p-2 border border-slate-100 flex flex-col gap-1">
+                          <div>
+                            <span className="text-slate-500 font-medium">Bệnh đang điều trị:</span>{" "}
+                            <span className="font-mono font-bold text-slate-800">{record.TEN_BENH_DANG_DIEU_TRI || "---"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 font-medium">Thuốc dùng điều trị:</span>{" "}
+                            <span className="font-semibold text-slate-800">{record.TEN_THUOC || "---"}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Tiền sử sản phụ khoa người lớn (for adult females / female gender index 2 preferred but shown generally for records with obstetric history) */}
+                <div className="border-b pb-3 bg-rose-50/15 p-2 rounded-lg border border-rose-100">
+                  <h3 className="font-bold text-rose-800 mb-1.5 text-xs uppercase tracking-wide flex items-center gap-1">
+                    <Heart className="w-3.5 h-3.5 text-rose-600" />
+                    3. Tiền sử Sản Phụ Khoa người lớn
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-3 gap-x-4 text-xs">
+                    <div>
+                      <span className="text-slate-500 font-medium">Tuổi bắt đầu hành kinh:</span>{" "}
+                      <span className="font-bold text-slate-800 font-mono">{record.CO_KINH_NGUYET_NAM_BAO_NHIEU_TUOI || "---"} tuổi</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Tính chất chu kỳ:</span>{" "}
+                      <span className="font-semibold text-slate-805">{record.TINH_CHAT_KINH_NGUYET === 1 ? "Đều" : record.TINH_CHAT_KINH_NGUYET === 0 ? "Không đều" : "---"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Tần suất / Số ngày chu kỳ kinh:</span>{" "}
+                      <span className="font-semibold text-slate-805 font-mono">{record.CHU_KY_KINH || "---"} ngày</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Lượng kinh nguyệt:</span>{" "}
+                      <span className="font-semibold text-slate-805">{record.LUONG_KINH || "---"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Đau bụng kinh:</span>{" "}
+                      <span className="font-semibold text-slate-805">{record.DAU_BUNG_KINH === 1 ? "Có" : "Không"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Tình trạng hôn nhân:</span>{" "}
+                      <span className="font-semibold text-slate-805">{record.DA_LAP_GIA_DINH === 1 ? "Đã lập gia đình" : "Chưa lập gia đình"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Chỉ số PARA (Sinh-Sảy-Sớm-Sống):</span>{" "}
+                      <span className="font-bold text-rose-700 font-mono">{record.PARA || "---"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Có tiền sử mổ phụ khoa:</span>{" "}
+                      <span className="font-semibold text-slate-805">{Number(record.SO_LAN_MO_SAN_PHU_KHOA ?? 0) > 0 ? `Có phẫu thuật (${record.SO_LAN_MO_SAN_PHU_KHOA} lần)` : "Không"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Biện pháp tránh thai đang dùng:</span>{" "}
+                      <span className="font-semibold text-slate-805">{record.CO_BPTT_KHONG === 1 ? (record.BIEN_PHAP_TRANH_THAI || "Có sử dụng") : "Không sử dụng"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Tiền sử gia đình (Adult) */}
+                <div className="border-b pb-3">
+                  <h3 className="font-bold text-slate-800 mb-1 text-xs uppercase tracking-wide">4. Tiền sử gia đình</h3>
+                  <p className="text-xs">
+                    <span className="text-slate-500 font-medium">Người nhà có mắc bệnh bẩm sinh/truyền nhiễm không:</span>{" "}
+                    <span className="font-semibold text-slate-800">{record.TSGD_MAC_BENH === 1 ? "Có" : "Không"}</span>
+                  </p>
+                  {record.TSGD_MAC_BENH === 1 && record.TSGD_TEN_BENH && (
+                    <p className="mt-1 text-xs">
+                      <span className="text-slate-500">Mã bệnh lâm sàng (ICD-10):</span>{" "}
+                      <span className="font-mono bg-red-50 text-red-700 px-1.5 py-0.5 rounded font-semibold text-xs border border-red-100">{record.TSGD_TEN_BENH}</span>
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Fam Health */}
+                <div className="border-b pb-3">
+                  <h3 className="font-bold text-slate-800 mb-1 text-xs uppercase tracking-wide">1. Tiền sử gia đình</h3>
+                  <p>
+                    <span className="text-slate-500">Người nhà có mắc bệnh bẩm sinh/truyền nhiễm không:</span>{" "}
+                    <span className="font-semibold text-slate-800">{record.TSGD_MAC_BENH === 1 ? "Có" : "Không"}</span>
+                  </p>
+                  {record.TSGD_MAC_BENH === 1 && record.TSGD_TEN_BENH && (
+                    <p className="mt-1">
+                      <span className="text-slate-500">Mã bệnh lâm sàng (ICD-10):</span>{" "}
+                      <span className="font-mono bg-red-50 text-red-700 px-1.5 py-0.5 rounded font-semibold text-xs border border-red-100">{record.TSGD_TEN_BENH}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Self Health */}
+                <div className="border-b pb-3">
+                  <h3 className="font-bold text-slate-800 mb-1 text-xs uppercase tracking-wide">2. Tiền sử bản thân</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-slate-500 font-medium">Sản khoa:</span>{" "}
+                      <span className="font-semibold text-slate-850">
+                        {record.SAN_KHOA === 1 ? "Bình thường" : "Bất thường"}
+                      </span>
+                      {record.SAN_KHOA === 0 && record.BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG && (
+                        <div className="mt-1 text-xs">
+                          <span className="text-slate-500">Chi tiết bệnh sản khoa:</span>{" "}
+                          <span className="font-mono bg-amber-50 text-amber-800 px-1 rounded font-semibold">{record.BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <span className="text-slate-500 font-medium">Tiền sử bệnh lý chung:</span>{" "}
+                      <span className="font-semibold text-slate-800">{record.MA_TSBT === 1 ? "Có bệnh lý" : "Khỏe mạnh, không có bệnh lý"}</span>
+                      {record.MA_TSBT === 1 && record.TSBT_TEN_BENH && (
+                        <div className="mt-1 text-xs">
+                          <span className="text-slate-500">Bệnh lý (ICD-10):</span>{" "}
+                          <span className="font-mono bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded font-semibold">{record.TSBT_TEN_BENH}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <span className="text-slate-500 font-medium">Hiện có đang điều trị bệnh:</span>{" "}
+                      <span className="font-semibold text-slate-800">{record.CO_DANG_DIEU_TRI_BENH === 1 ? "Đang điều trị" : "Không"}</span>
+                      {record.CO_DANG_DIEU_TRI_BENH === 1 && (
+                        <div className="mt-1 rounded bg-slate-55 p-2 bg-slate-50 border border-slate-100 text-xs flex flex-col gap-1">
+                          <div>
+                            <span className="text-slate-500 font-medium">Bệnh đang điều trị:</span>{" "}
+                            <span className="font-mono font-bold text-slate-800 text-xs">{record.TEN_BENH_DANG_DIEU_TRI || "---"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 font-medium">Thuốc dùng điều trị:</span>{" "}
+                            <span className="font-semibold text-slate-800">{record.TEN_THUOC || "---"}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Vaccine table */}
                 <div>
-                  <span className="text-slate-500 font-medium">Sản khoa:</span>{" "}
-                  <span className="font-semibold text-slate-850">
-                    {record.SAN_KHOA === 1 ? "Bình thường" : "Bất thường"}
-                  </span>
-                  {record.SAN_KHOA === 0 && record.BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG && (
-                    <div className="mt-1 text-xs">
-                      <span className="text-slate-500">Chi tiết bệnh sản khoa:</span>{" "}
-                      <span className="font-mono bg-amber-50 text-amber-800 px-1 rounded font-semibold">{record.BENH_GAY_RA_SAN_KHOA_KHONG_BINH_THUONG}</span>
-                    </div>
+                  <h3 className="font-bold text-slate-800 mb-2 text-xs uppercase tracking-wide">3. Lịch sử Tiêm chủng</h3>
+                  <div className="overflow-x-auto border rounded-lg">
+                    <table className="min-w-full divide-y divide-slate-200 text-xs">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Vắc xin BCG</th>
+                          <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Bạch hầu, Ho gà, Uốn ván</th>
+                          <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Sởi</th>
+                          <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Bại liệt</th>
+                          <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Viêm não Nhật Bản B</th>
+                          <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Viêm gan B</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-150">
+                        <tr>
+                          <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_BCG)}</td>
+                          <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_BH_HG_UV)}</td>
+                          <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_SOI)}</td>
+                          <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_BAI_LIET)}</td>
+                          <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_VNNB_B)}</td>
+                          <td className="px-3 py-2 text-slate-805 font-medium font-semibold text-blue-800">{getVaccineLabel(record.TIEM_CHUNG_VGB)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  {record.TIEM_CHUNG_CAC_LOAI_KHAC === 1 && record.TIEM_CHUNG_VAC_XIN_KHAC && (
+                    <p className="mt-2 text-xs text-slate-600">
+                      <span className="text-slate-500 font-medium">Vắc xin khác đã tiêm:</span>{" "}
+                      <span className="font-semibold text-slate-800">{record.TIEM_CHUNG_VAC_XIN_KHAC}</span>
+                    </p>
                   )}
                 </div>
-
-                <div>
-                  <span className="text-slate-500 font-medium">Tiền sử bệnh lý chung:</span>{" "}
-                  <span className="font-semibold text-slate-800">{record.MA_TSBT === 1 ? "Có bệnh lý" : "Khỏe mạnh, không có bệnh lý"}</span>
-                  {record.MA_TSBT === 1 && record.TSBT_TEN_BENH && (
-                    <div className="mt-1 text-xs">
-                      <span className="text-slate-500">Bệnh lý (ICD-10):</span>{" "}
-                      <span className="font-mono bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded font-semibold">{record.TSBT_TEN_BENH}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="md:col-span-2">
-                  <span className="text-slate-500 font-medium">Hiện có đang điều trị bệnh:</span>{" "}
-                  <span className="font-semibold text-slate-800">{record.CO_DANG_DIEU_TRI_BENH === 1 ? "Đang điều trị" : "Không"}</span>
-                  {record.CO_DANG_DIEU_TRI_BENH === 1 && (
-                    <div className="mt-1 rounded bg-slate-55 p-2 bg-slate-50 border border-slate-100 text-xs flex flex-col gap-1">
-                      <div>
-                        <span className="text-slate-500 font-medium">Bệnh đang điều trị:</span>{" "}
-                        <span className="font-mono font-bold text-slate-800 text-xs">{record.TEN_BENH_DANG_DIEU_TRI || "---"}</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 font-medium">Thuốc dùng điều trị:</span>{" "}
-                        <span className="font-semibold text-slate-800">{record.TEN_THUOC || "---"}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Vaccine table */}
-            <div>
-              <h3 className="font-bold text-slate-800 mb-2 text-xs uppercase tracking-wide">3. Lịch sử Tiêm chủng</h3>
-              <div className="overflow-x-auto border rounded-lg">
-                <table className="min-w-full divide-y divide-slate-200 text-xs">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Vắc xin BCG</th>
-                      <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Bạch hầu, Ho gà, Uốn ván</th>
-                      <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Sởi</th>
-                      <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Bại liệt</th>
-                      <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Viêm não Nhật Bản B</th>
-                      <th className="px-3 py-1.5 text-left font-semibold text-slate-600">Viêm gan B</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-150">
-                    <tr>
-                      <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_BCG)}</td>
-                      <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_BH_HG_UV)}</td>
-                      <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_SOI)}</td>
-                      <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_BAI_LIET)}</td>
-                      <td className="px-3 py-2 text-slate-805 font-medium">{getVaccineLabel(record.TIEM_CHUNG_VNNB_B)}</td>
-                      <td className="px-3 py-2 text-slate-805 font-medium font-semibold text-blue-800">{getVaccineLabel(record.TIEM_CHUNG_VGB)}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              {record.TIEM_CHUNG_CAC_LOAI_KHAC === 1 && record.TIEM_CHUNG_VAC_XIN_KHAC && (
-                <p className="mt-2 text-xs text-slate-600">
-                  <span className="text-slate-500 font-medium">Vắc xin khác đã tiêm:</span>{" "}
-                  <span className="font-semibold text-slate-800">{record.TIEM_CHUNG_VAC_XIN_KHAC}</span>
-                </p>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -482,43 +624,118 @@ export default function PrintPreview({ record, onBack, onUpdateRecord }: PrintPr
           </div>
 
           <div className="space-y-4 text-sm">
-            {/* Nhi khoa */}
-            {record.KHAM_NHI_KHOA === 1 && (
-              <div className="border rounded-lg p-4 bg-slate-50/40">
-                <h3 className="font-bold text-slate-905 mb-2 text-xs uppercase tracking-wide text-blue-700">A. Khám Nhi Khoa</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
-                  <div>
-                    <span className="text-slate-500 font-medium">Tuần hoàn:</span>{" "}
-                    <span className="text-slate-800 font-semibold">{record.NHI_KHOA_TUAN_HOAN || "Bình thường"}</span>
+            {/* Specialties conditional display */}
+            {record.KIEU_MAU === "OVER_19" ? (
+              <div className="space-y-4">
+                {/* 1. KHÁM NỘI KHOA CHUYÊN SÂU */}
+                {record.KHAM_NOI_KHOA !== 0 && (
+                  <div className="border rounded-lg p-4 bg-slate-50/40">
+                    <h3 className="font-bold text-slate-905 mb-2 text-xs uppercase tracking-wide text-blue-700">A1. Khám Nội Khoa chuyên sâu</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                      <div>
+                        <span className="text-slate-500 font-medium font-sans">1. Tuần hoàn (Hệ tim mạch):</span>{" "}
+                        <span className="text-slate-800 font-semibold">{record.NOI_KHOA_TUAN_HOAN || "Bình thường"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">2. Hô hấp (Lồng ngực):</span>{" "}
+                        <span className="text-slate-800 font-semibold">{record.NOI_KHOA_HO_HAP || "Bình thường"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">3. Tiêu hóa (Bụng):</span>{" "}
+                        <span className="text-slate-800 font-semibold">{record.NOI_KHOA_TIEU_HOA || "Bình thường"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">4. Thận - tiết niệu (Hố thận):</span>{" "}
+                        <span className="text-slate-800 font-semibold">{record.NOI_KHOA_THAN_TIETNIEU || "Bình thường"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">5. Cơ - xương - khớp (Chi vận động):</span>{" "}
+                        <span className="text-slate-800 font-semibold">{record.NOI_KHOA_CO_XUONG_KHOP || "Bình thường"}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">6. Thần kinh (Phản xạ/Cảm giác):</span>{" "}
+                        <span className="text-slate-800 font-semibold">{record.NOI_KHOA_THAN_KINH || "Bình thường"}</span>
+                      </div>
+                      <div className="md:col-span-2">
+                        <span className="text-slate-500 font-medium">7. Tâm thần (Trạng thái tinh thần):</span>{" "}
+                        <span className="text-slate-800 font-semibold">{record.NOI_KHOA_TAM_THAN || "Tỉnh táo, tiếp xúc tốt"}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">Hô hấp:</span>{" "}
-                    <span className="text-slate-800 font-semibold">{record.NHI_KHOA_HO_HAP || "Bình thường"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">Tiêu hóa:</span>{" "}
-                    <span className="text-slate-800 font-semibold">{record.NHI_KHOA_TIEU_HOA || "Bình thường"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">Thận - tiết niệu:</span>{" "}
-                    <span className="text-slate-800 font-semibold">{record.NHI_KHOA_THAN_TIETNIEU || "Bình thường"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">Thần kinh:</span>{" "}
-                    <span className="text-slate-800 font-semibold">{record.NHI_KHOA_THAN_KINH || "Bình thường"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 font-medium">Tâm thần:</span>{" "}
-                    <span className="text-slate-800 font-semibold">{record.NHI_KHOA_TAM_THAN || "Bình thường"}</span>
-                  </div>
-                  {record.NHI_KHOA_KHAC === 1 && (
-                    <div className="md:col-span-2 bg-slate-100/50 p-2 rounded border mt-1">
-                      <span className="text-slate-500 font-medium">Khám nhi khác ({record.TEN_LOAI_KHAM_NHI_KHOA_KHAC}):</span>{" "}
-                      <span className="text-slate-805 font-bold">{record.KET_QUA_KHAM_NHI_KHOA_KHAC}</span>
+                )}
+
+                {/* 2. KHÁM NGOẠI KHOA VS DA LIỄU */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {record.KHAM_NGOI_KHOA !== 0 && (
+                    <div className="border rounded-lg p-4 bg-slate-50/40 text-xs">
+                      <h3 className="font-bold text-slate-905 mb-1.5 text-[11px] uppercase tracking-wide text-blue-700">A2. Khám Ngoại Khoa</h3>
+                      <p className="bg-white p-2 rounded border border-slate-100 font-semibold text-slate-800 leading-relaxed min-h-12">
+                        {record.KET_QUA_KHAM_NGOI_KHOA || "Không sẹo vết mổ cũ, xương khớp vững."}
+                      </p>
+                    </div>
+                  )}
+
+                  {record.KHAM_DA_LIEU !== 0 && (
+                    <div className="border rounded-lg p-4 bg-slate-50/40 text-xs">
+                      <h3 className="font-bold text-slate-905 mb-1.5 text-[11px] uppercase tracking-wide text-blue-700">A3. Khám Da Liễu</h3>
+                      <p className="bg-white p-2 rounded border border-slate-100 font-semibold text-slate-800 leading-relaxed min-h-12">
+                        {record.KET_QUA_KHAM_DA_LIEU || "Da niêm mạc hồng hào, không có tỳ vết sùi."}
+                      </p>
                     </div>
                   )}
                 </div>
+
+                {/* 3. KHÁM SẢN PHỤ KHOA LÂM SÀNG */}
+                {record.KHAM_SAN_PHU_KHOA === 1 && (
+                  <div className="border rounded-lg p-4 bg-rose-50/10 border-rose-100 text-xs">
+                    <h3 className="font-bold text-rose-800 mb-1.5 text-[11px] uppercase tracking-wide flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5 text-rose-600" />
+                      A4. Khám Sản Phụ Khoa lâm sàng
+                    </h3>
+                    <p className="bg-white p-2 rounded border border-rose-100 font-semibold text-slate-800 leading-relaxed">
+                      {record.KET_QUA_KHAM_SAN_PHU_KHOA || "Cơ quan sinh dục bình thường, cổ tử cung nhẵn sạch."}
+                    </p>
+                  </div>
+                )}
               </div>
+            ) : (
+              record.KHAM_NHI_KHOA === 1 && (
+                <div className="border rounded-lg p-4 bg-slate-50/40">
+                  <h3 className="font-bold text-slate-905 mb-2 text-xs uppercase tracking-wide text-blue-700">A. Khám Nhi Khoa</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                    <div>
+                      <span className="text-slate-500 font-medium">Tuần hoàn:</span>{" "}
+                      <span className="text-slate-800 font-semibold">{record.NHI_KHOA_TUAN_HOAN || "Bình thường"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Hô hấp:</span>{" "}
+                      <span className="text-slate-800 font-semibold">{record.NHI_KHOA_HO_HAP || "Bình thường"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Tiêu hóa:</span>{" "}
+                      <span className="text-slate-800 font-semibold">{record.NHI_KHOA_TIEU_HOA || "Bình thường"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Thận - tiết niệu:</span>{" "}
+                      <span className="text-slate-805 font-semibold">{record.NHI_KHOA_THAN_TIETNIEU || "Bình thường"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Thần kinh:</span>{" "}
+                      <span className="text-slate-800 font-semibold">{record.NHI_KHOA_THAN_KINH || "Bình thường"}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-medium">Tâm thần:</span>{" "}
+                      <span className="text-slate-800 font-semibold">{record.NHI_KHOA_TAM_THAN || "Bình thường"}</span>
+                    </div>
+                    {record.NHI_KHOA_KHAC === 1 && (
+                      <div className="md:col-span-2 bg-slate-100/50 p-2 rounded border mt-1">
+                        <span className="text-slate-500 font-medium">Khám nhi khác ({record.TEN_LOAI_KHAM_NHI_KHOA_KHAC}):</span>{" "}
+                        <span className="text-slate-805 font-bold">{record.KET_QUA_KHAM_NHI_KHOA_KHAC}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
             )}
 
             {/* Mắt */}
